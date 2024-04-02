@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34714.143
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Com2vPilotVolume", "Com2vPilotVolume\Com2vPilotVolume.csproj", "{8B3DC514-C5E0-4C5F-B388-531A7362E862}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinCoreAudioApiLib", "WinCoreAudioApiLib\WinCoreAudioApiLib.csproj", "{4311AE8B-019C-49B6-9C97-13D86A4932A9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8B3DC514-C5E0-4C5F-B388-531A7362E862}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B3DC514-C5E0-4C5F-B388-531A7362E862}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B3DC514-C5E0-4C5F-B388-531A7362E862}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B3DC514-C5E0-4C5F-B388-531A7362E862}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4311AE8B-019C-49B6-9C97-13D86A4932A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4311AE8B-019C-49B6-9C97-13D86A4932A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4311AE8B-019C-49B6-9C97-13D86A4932A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4311AE8B-019C-49B6-9C97-13D86A4932A9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {32681ADB-AD5C-4DB9-836E-20C1B3130D4E}
+	EndGlobalSection
+EndGlobal
