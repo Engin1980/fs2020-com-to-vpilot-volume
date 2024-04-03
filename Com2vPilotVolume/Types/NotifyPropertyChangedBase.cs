@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Com2vPilotVolume
+namespace eng.com2vPilotVolume.Types
 {
     public class NotifyPropertyChangedBase : INotifyPropertyChanged
     {

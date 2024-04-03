@@ -6,10 +6,20 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <RootNamespace>eng.com2vPilotVolume</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WinCoreAudioApiLib\WinCoreAudioApiLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ESimConnect">
+      <HintPath>..\DLLs\ESimConnect.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.FlightSimulator.SimConnect">
+      <HintPath>..\DLLs\Microsoft.FlightSimulator.SimConnect.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

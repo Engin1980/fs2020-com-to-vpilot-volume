@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WinCoreAudioApiLib
+namespace Eng.WinCoreAudioApiLib
 {
   public static class LoggingProvider
   {
-    private static ILoggerFactory loggerFactory = LoggerFactory.Create(q =>
+    private static readonly ILoggerFactory loggerFactory = LoggerFactory.Create(q =>
     {
       q.AddFilter(x => true).AddConsole();
     });

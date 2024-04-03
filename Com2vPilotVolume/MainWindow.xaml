@@ -7,19 +7,57 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800"
         Loaded="Window_Loaded">
-  <DockPanel>
-    <Button DockPanel.Dock="Top" Content="Refresh" x:Name="btnRefresh" Click="btnRefresh_Click" />
-    <ListView  ItemsSource="{Binding Apps}">
-      <ListView.ItemTemplate>
-        <DataTemplate>
-          <StackPanel Orientation="Horizontal">
-            <Label Content="{Binding ProcessId}" Width="50" />
-            <Label Content="{Binding Name}" Width="200" />
-            <Label Content="{Binding Volume}" Width="50" />
-            <Slider Value="{Binding Volume}" Minimum="0" Maximum="1" Width="200" />
-          </StackPanel>
-        </DataTemplate>
-      </ListView.ItemTemplate>
-    </ListView>
-  </DockPanel>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="5" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.Row="0" >
+      <GroupBox Header="Sim-Con">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+          </Grid.RowDefinitions>
+          <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
+          <Label Content="{Binding SimConState.IsConnected}" Grid.Row="0" Grid.Column="1" />
+          <Label Content="Active Com Index:" Grid.Row="1" Grid.Column="0" />
+          <Label Content="{Binding SimConState.ActiveComIndex}" Grid.Row="1" Grid.Column="1" />
+          <Label Content="Active Com Volume:" Grid.Row="2" Grid.Column="0" />
+          <Label Content="{Binding SimConState.Volume}" Grid.Row="2" Grid.Column="1" />
+        </Grid>
+      </GroupBox>
+      <GroupBox Header="vPilot">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+          </Grid.RowDefinitions>
+          <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
+          <Label Content="{Binding VPilotState.IsConnected}" Grid.Row="0" Grid.Column="1" />
+          <Label Content="Process Id:" Grid.Row="1" Grid.Column="0" />
+          <Label Content="{Binding VPilotState.Process.ProcessId}" Grid.Row="1" Grid.Column="1" />
+          <Label Content="Current Volume:" Grid.Row="2" Grid.Column="0" />
+          <Label Content="{Binding VPilotState.Volume}" Grid.Row="2" Grid.Column="1" />
+        </Grid>
+      </GroupBox>
+    </StackPanel>
+    <GridSplitter Grid.Row="1" />
+    <DockPanel Grid.Row="2">
+      <TextBox MinLines="5" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" />
+    </DockPanel>
+
+  </Grid>
 </Window>

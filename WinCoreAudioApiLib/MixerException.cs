@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WinCoreAudioApiLib
+namespace Eng.WinCoreAudioApiLib
 {
   internal class MixerException : Exception
   {
