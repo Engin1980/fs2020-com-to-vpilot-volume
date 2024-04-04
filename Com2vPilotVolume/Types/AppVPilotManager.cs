@@ -81,7 +81,7 @@ namespace eng.com2vPilotVolume.Types
       this.connectionTimer = new System.Timers.Timer()
       {
         AutoReset = true,
-        Interval = 5000,
+        Interval = 30000,
         Enabled = false
       };
       this.connectionTimer.Elapsed += ConnectionTimer_Elapsed;
