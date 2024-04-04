@@ -18,5 +18,7 @@ namespace eng.com2vPilotVolume.Types
 
     public static implicit operator double(Volume value) => value.value;
     public static implicit operator Volume(double value) => new Volume(value);
+
+    public override string ToString() => $"{value * 100:0.00} %";
   }
 }

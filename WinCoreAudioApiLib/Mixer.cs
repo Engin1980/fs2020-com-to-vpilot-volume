@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using ELogging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +10,16 @@ namespace Eng.WinCoreAudioApiLib
 {
   public class Mixer
   {
-    private readonly ILogger logger = LoggingProvider.CreateLogger<Mixer>();
+    private readonly Logger logger;
+
+    public Mixer()
+    {
+      this.logger = Logger.Create(this, "WCAA-Mixer");
+    }
 
     public IEnumerable<int> GetProcessIds()
     {
-      this.logger.LogInformation("GetProcessIds() invoked");
+      this.logger.Log(LogLevel.INFO, "GetProcessIds() invoked");
 
       // get the speakers (1st render + multimedia) device
       IMMDeviceEnumerator deviceEnumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
@@ -41,7 +46,7 @@ namespace Eng.WinCoreAudioApiLib
       Marshal.ReleaseComObject(speakers);
       Marshal.ReleaseComObject(deviceEnumerator);
 
-      this.logger.LogInformation("GetProcessIds() completed.");
+      this.logger.Log(LogLevel.INFO, "GetProcessIds() completed.");
     }
 
     public double GetVolume(int processId)
@@ -52,7 +57,7 @@ namespace Eng.WinCoreAudioApiLib
       volume.GetMasterVolume(out float level);
 
       double ret = level;
-      logger.LogInformation($"Get Volume for {processId} returned {ret}");
+      logger.Log(LogLevel.INFO, $"Get Volume for {processId} returned {ret}");
       return ret;
     }
 
@@ -62,13 +67,13 @@ namespace Eng.WinCoreAudioApiLib
         ?? throw new MixerException($"Failed to get mute-flag for '{processId}'.");
       volume.GetMute(out bool ret);
 
-      logger.LogInformation($"Get mute for {processId} returned {ret}");
+      logger.Log(LogLevel.INFO, $"Get mute for {processId} returned {ret}");
       return ret;
     }
 
     public void SetVolume(int processId, double level)
     {
-      logger.LogInformation($"Set Volume for {processId} setting {level}");
+      logger.Log(LogLevel.INFO, $"Set Volume for {processId} setting {level}");
 
       level = NormalizeLevel(level);
       ISimpleAudioVolume volume = TryGetVolumeObject(processId)
@@ -85,9 +90,9 @@ namespace Eng.WinCoreAudioApiLib
 
     public void SetMute(int processId, bool isMuted)
     {
-      logger.LogInformation($"Set Mute for {processId} setting {isMuted}");
+      logger.Log(LogLevel.INFO, $"Set Mute for {processId} setting {isMuted}");
 
-      ISimpleAudioVolume volume = TryGetVolumeObject(processId);
+      ISimpleAudioVolume? volume = TryGetVolumeObject(processId);
       if (volume == null)
         throw new MixerException($"Failed to set mute-flag for '{processId}'.");
 

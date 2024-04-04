@@ -8,12 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DllTypes\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+    <Reference Include="ELogging">
+      <HintPath>..\DLLs\ELogging.dll</HintPath>
+    </Reference>
+    <Reference Include="ESystem">
+      <HintPath>..\DLLs\ESystem.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

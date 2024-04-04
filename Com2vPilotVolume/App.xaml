@@ -4,6 +4,11 @@
              xmlns:local="clr-namespace:Com2vPilotVolume"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
-    </Application.Resources>
+    <Style x:Key="WinAll" TargetType="{x:Type Window}">
+      <Setter Property="FontFamily"
+        Value="Bahnschrift" />
+      <Setter Property="FontSize"
+        Value="16" />
+    </Style>
+  </Application.Resources>
 </Application>

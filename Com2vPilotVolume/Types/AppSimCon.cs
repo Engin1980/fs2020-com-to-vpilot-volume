@@ -10,10 +10,12 @@ namespace eng.com2vPilotVolume.Types
 {
   public class AppSimCon
   {
+
     #region Public Classes
 
     public class StateViewModel : NotifyPropertyChangedBase
     {
+
       #region Public Properties
 
       public int ActiveComIndex
@@ -45,6 +47,7 @@ namespace eng.com2vPilotVolume.Types
       }
 
       #endregion Public Constructors
+
     }
 
     #endregion Public Classes
@@ -54,6 +57,7 @@ namespace eng.com2vPilotVolume.Types
     private const int INT_EMPTY = -1;
     private readonly System.Timers.Timer connectionTimer;
     private readonly ESimConnect.ESimConnect eSimCon;
+    private readonly ELogging.Logger logger;
     private int comVolumeTypeId = INT_EMPTY;
 
     #endregion Private Fields
@@ -69,6 +73,7 @@ namespace eng.com2vPilotVolume.Types
 
     public AppSimCon()
     {
+      this.logger = ELogging.Logger.Create(this, nameof(AppSimCon));
       this.eSimCon = new();
 
       this.connectionTimer = new System.Timers.Timer()
@@ -82,10 +87,21 @@ namespace eng.com2vPilotVolume.Types
 
     #endregion Public Constructors
 
+    #region Public Methods
+
+    public void Start()
+    {
+      StartIfNotConnected();
+    }
+
+    #endregion Public Methods
+
     #region Private Methods
 
     private void ConnectionTimer_Elapsed(object? sender, ElapsedEventArgs e)
     {
+      this.logger.Log(ELogging.LogLevel.INFO, "Reconnecting...");
+
       try
       {
         this.eSimCon.Open();
@@ -93,10 +109,12 @@ namespace eng.com2vPilotVolume.Types
         // on success:
         RegisterToSimCon();
         this.connectionTimer.Enabled = false;
+        this.logger.Log(ELogging.LogLevel.INFO, "Connection enabled.");
       }
       catch (Exception ex)
       {
         // intentionally blank
+        this.logger.Log(ELogging.LogLevel.INFO, "Connection failed, will retry after a while...");
       }
     }
 
@@ -116,6 +134,11 @@ namespace eng.com2vPilotVolume.Types
       this.eSimCon.RequestDataRepeatedly<double>(typeId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
       this.eSimCon.DataReceived += ESimCon_DataReceived;
       this.comVolumeTypeId = typeId;
+    }
+    private void StartIfNotConnected()
+    {
+      if (connectionTimer.Enabled) return;
+      connectionTimer.Enabled = true;
     }
 
     #endregion Private Methods
