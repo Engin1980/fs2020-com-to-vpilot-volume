@@ -4,10 +4,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Com2vPilotVolume"
+        xmlns:wpfc="clr-namespace:ESystem.WPF.Converters;assembly=ESystem.WPF"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800"
         Loaded="Window_Loaded"
         Style="{StaticResource WinAll}">
+  <Window.Resources>
+    <wpfc:BoolToCustomSolidBrushConverter x:Key="BoolToCustomSolidBrushConverter" />
+  </Window.Resources>
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -36,7 +40,9 @@
             <RowDefinition />
           </Grid.RowDefinitions>
           <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
-          <Label Content="{Binding SimConState.IsConnected}" Grid.Row="0" Grid.Column="1" />
+          <Label Content="{Binding SimConState.IsConnected}" 
+                 Foreground="{Binding SimConState.IsConnected, Converter={StaticResource BoolToCustomSolidBrushConverter}, ConverterParameter=Green;Red}"
+                 Grid.Row="0" Grid.Column="1" />
           <Label Content="Active Com Index:" Grid.Row="1" Grid.Column="0" />
           <Label Content="{Binding SimConState.ActiveComIndex}" Grid.Row="1" Grid.Column="1" />
           <Label Content="Active Com Volume:" Grid.Row="2" Grid.Column="0" />
@@ -56,7 +62,9 @@
             <RowDefinition />
           </Grid.RowDefinitions>
           <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
-          <Label Content="{Binding VPilotState.IsConnected}" Grid.Row="0" Grid.Column="1" />
+          <Label Content="{Binding VPilotState.IsConnected}" 
+                 Foreground="{Binding VPilotState.IsConnected, Converter={StaticResource BoolToCustomSolidBrushConverter}, ConverterParameter=Green;Red}"
+                 Grid.Row="0" Grid.Column="1" />
           <Label Content="Process Id:" Grid.Row="1" Grid.Column="0" />
           <Label Content="{Binding VPilotState.VPilotProcess.Id}" Grid.Row="1" Grid.Column="1" />
           <Label Content="Current Volume:" Grid.Row="2" Grid.Column="0" />
