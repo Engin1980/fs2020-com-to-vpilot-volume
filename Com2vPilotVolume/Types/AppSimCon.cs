@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using static ESimConnect.SimUnits;
 
 namespace eng.com2vPilotVolume.Types
 {
@@ -59,11 +60,9 @@ namespace eng.com2vPilotVolume.Types
     private readonly System.Timers.Timer connectionTimer;
     private readonly ESimConnect.ESimConnect eSimCon;
     private readonly ELogging.Logger logger;
-    private int comVolumeTypeId = INT_EMPTY;
-    private int comVolumeRequestId = INT_EMPTY;
-    private int com1ReceiveEventId = INT_EMPTY;
-    private int com2ReceiveEventId = INT_EMPTY;
-    private int com3ReceiveEventId = INT_EMPTY;
+    private readonly int[] comVolumeRequestIds = new int[3] { INT_EMPTY, INT_EMPTY, INT_EMPTY };
+    private readonly int[] comTransmitRequestIds = new int[3] { INT_EMPTY, INT_EMPTY, INT_EMPTY };
+    private readonly Volume[] volumes = new Volume[3] { 0, 0, 0 };
 
     #endregion Private Fields
 
@@ -134,37 +133,39 @@ namespace eng.com2vPilotVolume.Types
 
     private void ESimCon_DataReceived(ESimConnect.ESimConnect sender, ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
-      if (e.RequestId != this.comVolumeRequestId) return;
-
-      double volumeDouble = (double)e.Data;
-      Volume volume = volumeDouble;
-
-      this.VolumeUpdateCallback?.Invoke(volume);
+      for (int i = 1; i <= 3; i++)
+      {
+        if (e.RequestId == this.comVolumeRequestIds[i])
+        {
+          double volumeDouble = (double)e.Data;
+          Volume volume = volumeDouble;
+          if (this.comTransmitRequestIds[i] == 1)
+            this.VolumeUpdateCallback?.Invoke(volume);
+        }
+        else if (e.RequestId == this.comTransmitRequestIds[i])
+        {
+          int value = (int)(double)e.Data;
+          this.comTransmitRequestIds[i] = value;
+          this.VolumeUpdateCallback?.Invoke(this.comVolumeRequestIds[i]);
+        }
+      }
     }
 
     private void RegisterToSimCon()
     {
+      int typeId;
       this.eSimCon.DataReceived += ESimCon_DataReceived;
-      int typeId = this.eSimCon.RegisterPrimitive<double>(SimVars.Aircraft.RadioAndNavigation.COM_VOLUME);
-      this.eSimCon.RequestPrimitiveRepeatedly(typeId, out int requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
-      this.comVolumeTypeId = typeId;
-      this.comVolumeRequestId = requestId;
 
-      this.eSimCon.EventInvoked += ESimCon_EventInvoked;
-      this.com1ReceiveEventId = this.eSimCon.RegisterSystemEvent("COM1_RECEIVE_SELECT");
-      this.com2ReceiveEventId = this.eSimCon.RegisterSystemEvent("COM2_RECEIVE_SELECT");
-      this.com3ReceiveEventId = this.eSimCon.RegisterSystemEvent("COM3_RECEIVE_SELECT");
+      for (int i = 1; i <= 3; i++)
+      {
+        typeId = this.eSimCon.RegisterPrimitive<double>($"COM VOLUME:{i}");
+        this.eSimCon.RequestPrimitiveRepeatedly(typeId, out int requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
+        this.comVolumeRequestIds[i] = requestId;
 
-    }
-
-    private void ESimCon_EventInvoked(ESimConnect.ESimConnect sender, ESimConnect.ESimConnect.ESimConnectEventInvokedEventArgs e)
-    {
-      if (e.RequestId == this.com1ReceiveEventId)
-        this.State.ActiveComIndex = 1;
-      else if (e.RequestId == this.com2ReceiveEventId)
-        this.State.ActiveComIndex = 2;
-      else if (e.RequestId == this.com3ReceiveEventId)
-        this.State.ActiveComIndex = 3;
+        typeId = this.eSimCon.RegisterPrimitive<double>($"COM TRANSMIT:{i}");
+        this.eSimCon.RequestPrimitiveRepeatedly(typeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
+        this.comTransmitRequestIds[i] = requestId;
+      }
     }
 
     private void StartIfNotConnected()
