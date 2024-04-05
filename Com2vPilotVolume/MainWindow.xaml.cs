@@ -53,7 +53,7 @@ namespace Com2vPilotVolume
     #region Private Fields
 
     private readonly AppSimCon appSimCon = new();
-    private readonly AppVPilotManager appVolumeManager = new();
+    private readonly AppVPilotManager appVPilotManager = new();
 
     private readonly ELogging.Logger logger;
 
@@ -70,7 +70,7 @@ namespace Com2vPilotVolume
     public MainWindow()
     {
       InitializeComponent();
-      this.Model = new ViewModel(this.appSimCon.State, this.appVolumeManager.State);
+      this.Model = new ViewModel(this.appSimCon.State, this.appVPilotManager.State);
       this.DataContext = this.Model;
       this.logger = ELogging.Logger.Create(this, "MainWindow", false);
 
@@ -85,7 +85,8 @@ namespace Com2vPilotVolume
     {
       if (!Dispatcher.CheckAccess())
         Dispatcher.Invoke(() => ExtendLog(li));
-      else { 
+      else
+      {
         txtOut.AppendText($"\n{DateTime.Now}\t{li.SenderName,-20}\t{li.Level,-12}\t{li.Message}");
         txtOut.ScrollToEnd();
       }
@@ -106,9 +107,17 @@ namespace Com2vPilotVolume
       this.logger.Log(ELogging.LogLevel.INFO, "Window_Loaded invoked");
 
       this.appSimCon.Start();
-      this.appVolumeManager.Start();
+      this.appVPilotManager.Start();
     }
 
     #endregion Private Methods
+
+    private void btnV_Click(object sender, RoutedEventArgs e)
+    {
+      Button btn = (Button)sender;
+      double v = double.Parse((string) btn.Tag) /  100;
+
+      this.appVPilotManager.SetVolume(v);
+    }
   }
 }

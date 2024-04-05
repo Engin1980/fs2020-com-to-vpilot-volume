@@ -46,7 +46,12 @@
           <Label Content="Active Com Index:" Grid.Row="1" Grid.Column="0" />
           <Label Content="{Binding SimConState.ActiveComIndex}" Grid.Row="1" Grid.Column="1" />
           <Label Content="Active Com Volume:" Grid.Row="2" Grid.Column="0" />
-          <Label Content="{Binding SimConState.Volume}" Grid.Row="2" Grid.Column="1" />
+          <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+            <Label Content="{Binding SimConState.Volume}" Grid.Row="2" Grid.Column="1" />
+            <Button x:Name="btnV50" Content="50%" Tag="50" Click="btnV_Click" />
+            <Button x:Name="btnV100" Content="100%" Tag="100" Click="btnV_Click" />
+          </StackPanel>
+
         </Grid>
       </GroupBox>
 

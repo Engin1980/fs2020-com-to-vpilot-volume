@@ -60,9 +60,9 @@ namespace eng.com2vPilotVolume.Types
     private const string VPILOT_PROCESS_NAME = "vPilot";
 
     private readonly System.Timers.Timer connectionTimer;
-    private readonly System.Timers.Timer updateTimer;
     private readonly Logger logger;
     private readonly Mixer mixer;
+    private readonly System.Timers.Timer updateTimer;
 
     #endregion Private Fields
 
@@ -97,12 +97,17 @@ namespace eng.com2vPilotVolume.Types
       this.mixer = new();
     }
 
-    private void UpdateTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    #endregion Public Constructors
+
+    #region Public Methods
+
+    public Action<Volume> GetVolumeUpdateCallback() => (q => this.SetVolume(q));
+
+    public void SetVolume(Volume v)
     {
       try
       {
-        Volume volume = this.mixer.GetVolume(this.State.VPilotProcess!.Id);
-        this.State.Volume = volume;
+        this.mixer.SetVolume(this.State.VPilotProcess!.Id, v);
       }
       catch (Exception ex)
       {
@@ -110,17 +115,11 @@ namespace eng.com2vPilotVolume.Types
         this.State.VPilotProcess = null;
         this.State.IsConnected = false;
         this.connectionTimer.Enabled = true;
-        this.logger.Log(LogLevel.WARNING, "Error reading volume of vPilot process, disconnected");
+        this.logger.Log(LogLevel.WARNING, "Error setting volume of vPilot process, disconnected");
         this.logger.Log(LogLevel.WARNING, "Error info: " + ex.Message);
         this.logger.Log(LogLevel.INFO, "Reconnecting after a while.");
       }
     }
-
-    #endregion Public Constructors
-
-    #region Public Methods
-
-    public Action<Volume> GetVolumeUpdateCallback() => (q => this.UpdateVolume(q));
 
     public void Start()
     {
@@ -158,9 +157,23 @@ namespace eng.com2vPilotVolume.Types
       connectionTimer.Enabled = true;
     }
 
-    private void UpdateVolume(Volume value)
+    private void UpdateTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
-      throw new NotImplementedException();
+      try
+      {
+        Volume volume = this.mixer.GetVolume(this.State.VPilotProcess!.Id);
+        this.State.Volume = volume;
+      }
+      catch (Exception ex)
+      {
+        this.updateTimer.Enabled = false;
+        this.State.VPilotProcess = null;
+        this.State.IsConnected = false;
+        this.connectionTimer.Enabled = true;
+        this.logger.Log(LogLevel.WARNING, "Error reading volume of vPilot process, disconnected");
+        this.logger.Log(LogLevel.WARNING, "Error info: " + ex.Message);
+        this.logger.Log(LogLevel.INFO, "Reconnecting after a while.");
+      }
     }
 
     #endregion Private Methods
