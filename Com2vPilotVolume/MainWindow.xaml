@@ -29,52 +29,54 @@
       <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="DarkGray" ShowsPreview="True" />
 
       <GroupBox Header="Sim-Con" Grid.Column="0">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-          </Grid.RowDefinitions>
-          <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
-          <Label Content="{Binding SimConState.IsConnected}" 
-                 Foreground="{Binding SimConState.IsConnected, Converter={StaticResource BoolToCustomSolidBrushConverter}, ConverterParameter=Green;Red}"
+        <DockPanel Background="{Binding SimConState.IsConnected, Converter={StaticResource BoolToCustomSolidBrushConverter}, ConverterParameter=#AAFFAA;#FFAAAA}">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition />
+              <RowDefinition />
+              <RowDefinition />
+            </Grid.RowDefinitions>
+            <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
+            <Label Content="{Binding SimConState.IsConnected}" 
                  Grid.Row="0" Grid.Column="1" />
-          <Label Content="Active Com Index:" Grid.Row="1" Grid.Column="0" />
-          <Label Content="{Binding SimConState.ActiveComIndex}" Grid.Row="1" Grid.Column="1" />
-          <Label Content="Active Com Volume:" Grid.Row="2" Grid.Column="0" />
-          <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
-            <Label Content="{Binding SimConState.Volume}" Grid.Row="2" Grid.Column="1" />
-            <Button x:Name="btnV50" Content="50%" Tag="50" Click="btnV_Click" />
-            <Button x:Name="btnV100" Content="100%" Tag="100" Click="btnV_Click" />
-          </StackPanel>
+            <Label Content="Active Com Index:" Grid.Row="1" Grid.Column="0" />
+            <Label Content="{Binding SimConState.ActiveComIndex}" Grid.Row="1" Grid.Column="1" />
+            <Label Content="Active Com Volume:" Grid.Row="2" Grid.Column="0" />
+            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+              <Label Content="{Binding SimConState.Volume}" Grid.Row="2" Grid.Column="1" />
+              <Button x:Name="btnV50" Content="50%" Tag="50" Click="btnV_Click" />
+              <Button x:Name="btnV100" Content="100%" Tag="100" Click="btnV_Click" />
+            </StackPanel>
 
-        </Grid>
+          </Grid>
+        </DockPanel>
       </GroupBox>
 
       <GroupBox Header="vPilot" Grid.Column="2">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-          </Grid.RowDefinitions>
-          <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
-          <Label Content="{Binding VPilotState.IsConnected}" 
-                 Foreground="{Binding VPilotState.IsConnected, Converter={StaticResource BoolToCustomSolidBrushConverter}, ConverterParameter=Green;Red}"
+        <DockPanel Background="{Binding VPilotState.IsConnected, Converter={StaticResource BoolToCustomSolidBrushConverter}, ConverterParameter=#AAFFAA;#FFAAAA}">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition />
+              <RowDefinition />
+              <RowDefinition />
+            </Grid.RowDefinitions>
+            <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
+            <Label Content="{Binding VPilotState.IsConnected}" 
                  Grid.Row="0" Grid.Column="1" />
-          <Label Content="Process Id:" Grid.Row="1" Grid.Column="0" />
-          <Label Content="{Binding VPilotState.VPilotProcess.Id}" Grid.Row="1" Grid.Column="1" />
-          <Label Content="Current Volume:" Grid.Row="2" Grid.Column="0" />
-          <Label Content="{Binding VPilotState.Volume}" Grid.Row="2" Grid.Column="1" />
-        </Grid>
+            <Label Content="Process Id:" Grid.Row="1" Grid.Column="0" />
+            <Label Content="{Binding VPilotState.VPilotProcess.Id}" Grid.Row="1" Grid.Column="1" />
+            <Label Content="Current Volume:" Grid.Row="2" Grid.Column="0" />
+            <Label Content="{Binding VPilotState.Volume}" Grid.Row="2" Grid.Column="1" />
+          </Grid>
+        </DockPanel>
       </GroupBox>
     </Grid>
 

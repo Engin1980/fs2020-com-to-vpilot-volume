@@ -6,7 +6,7 @@
     <Application.Resources>
     <Style x:Key="WinAll" TargetType="{x:Type Window}">
       <Setter Property="FontFamily"
-        Value="Bahnschrift" />
+        Value="Consolas" />
       <Setter Property="FontSize"
         Value="14" />
     </Style>

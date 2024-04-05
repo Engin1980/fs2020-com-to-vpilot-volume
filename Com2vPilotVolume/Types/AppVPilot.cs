@@ -10,8 +10,9 @@ using System.Threading.Tasks;
 
 namespace eng.com2vPilotVolume.Types
 {
-  public class AppVPilotManager
+  public class AppVPilot
   {
+    public record Settings(int ConnectionTimerInterval, int ReadVolumeTimerInterval);
 
     #region Public Classes
 
@@ -62,7 +63,7 @@ namespace eng.com2vPilotVolume.Types
     private readonly System.Timers.Timer connectionTimer;
     private readonly Logger logger;
     private readonly Mixer mixer;
-    private readonly System.Timers.Timer updateTimer;
+    private readonly System.Timers.Timer readVolumeTimer;
 
     #endregion Private Fields
 
@@ -74,25 +75,25 @@ namespace eng.com2vPilotVolume.Types
 
     #region Public Constructors
 
-    public AppVPilotManager()
+    public AppVPilot(Settings settings)
     {
-      this.logger = Logger.Create(this, nameof(AppVPilotManager));
+      this.logger = Logger.Create(this, nameof(AppVPilot));
 
       this.connectionTimer = new System.Timers.Timer()
       {
         AutoReset = true,
-        Interval = 30000,
+        Interval = settings.ConnectionTimerInterval,
         Enabled = false
       };
       this.connectionTimer.Elapsed += ConnectionTimer_Elapsed;
 
-      this.updateTimer = new System.Timers.Timer()
+      this.readVolumeTimer = new System.Timers.Timer()
       {
         AutoReset = true,
-        Interval = 250,
+        Interval = settings.ReadVolumeTimerInterval,
         Enabled = false
       };
-      this.updateTimer.Elapsed += UpdateTimer_Elapsed;
+      this.readVolumeTimer.Elapsed += ReadVolumeTimer_Elapsed;
 
       this.mixer = new();
     }
@@ -111,7 +112,7 @@ namespace eng.com2vPilotVolume.Types
       }
       catch (Exception ex)
       {
-        this.updateTimer.Enabled = false;
+        this.readVolumeTimer.Enabled = false;
         this.State.VPilotProcess = null;
         this.State.IsConnected = false;
         this.connectionTimer.Enabled = true;
@@ -135,7 +136,7 @@ namespace eng.com2vPilotVolume.Types
       this.logger.Log(LogLevel.INFO, "Reconnecting...");
       var tmp = this.mixer.GetProcessIds()
         .Select(q => Process.GetProcessById(q))
-        .TapEach(q => this.logger.Log(LogLevel.VERBOSE, $"Found process {q.ProcessName}"))
+        .TapEach(q => this.logger.Log(LogLevel.DEBUG, $"Found process {q.ProcessName}"))
         .FirstOrDefault(q => q.ProcessName == VPILOT_PROCESS_NAME);
       if (tmp is not null)
       {
@@ -143,7 +144,7 @@ namespace eng.com2vPilotVolume.Types
         this.State.IsConnected = true;
         this.connectionTimer.Enabled = false;
         this.logger.Log(LogLevel.INFO, "VPilot found, connected");
-        this.updateTimer.Enabled = true;
+        this.readVolumeTimer.Enabled = true;
       }
       else
       {
@@ -157,7 +158,7 @@ namespace eng.com2vPilotVolume.Types
       connectionTimer.Enabled = true;
     }
 
-    private void UpdateTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    private void ReadVolumeTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
       try
       {
@@ -166,7 +167,7 @@ namespace eng.com2vPilotVolume.Types
       }
       catch (Exception ex)
       {
-        this.updateTimer.Enabled = false;
+        this.readVolumeTimer.Enabled = false;
         this.State.VPilotProcess = null;
         this.State.IsConnected = false;
         this.connectionTimer.Enabled = true;

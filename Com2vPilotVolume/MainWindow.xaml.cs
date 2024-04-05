@@ -13,7 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ESystem.Asserting;
-using ELogging.Model;
+using Microsoft.Extensions.Configuration;
+using ELogging;
 
 namespace Com2vPilotVolume
 {
@@ -22,6 +23,8 @@ namespace Com2vPilotVolume
   /// </summary>
   public partial class MainWindow : Window
   {
+    public record Settings(int[] StartupWindowSize);
+
     #region Public Classes
 
     public class ViewModel
@@ -30,13 +33,13 @@ namespace Com2vPilotVolume
 
       public AppSimCon.StateViewModel SimConState { get; private set; }
 
-      public AppVPilotManager.StateViewModel VPilotState { get; private set; }
+      public AppVPilot.StateViewModel VPilotState { get; private set; }
 
       #endregion Public Properties
 
       #region Public Constructors
 
-      public ViewModel(AppSimCon.StateViewModel simConState, AppVPilotManager.StateViewModel vpilotState)
+      public ViewModel(AppSimCon.StateViewModel simConState, AppVPilot.StateViewModel vpilotState)
       {
         EAssert.Argument.IsNotNull(simConState, nameof(simConState));
         EAssert.Argument.IsNotNull(vpilotState, nameof(vpilotState));
@@ -52,8 +55,8 @@ namespace Com2vPilotVolume
 
     #region Private Fields
 
-    private readonly AppSimCon appSimCon = new();
-    private readonly AppVPilotManager appVPilotManager = new();
+    private readonly AppSimCon appSimCon;
+    private readonly AppVPilot appVPilot;
 
     private readonly ELogging.Logger logger;
 
@@ -70,7 +73,16 @@ namespace Com2vPilotVolume
     public MainWindow()
     {
       InitializeComponent();
-      this.Model = new ViewModel(this.appSimCon.State, this.appVPilotManager.State);
+
+      var cfg = App.Configuration;
+      this.appSimCon = new(cfg.GetSection("AppSimCon").Get<AppSimCon.Settings>() ?? throw new ApplicationException("Invalid config file - AppSimCon config missing."));
+      this.appVPilot = new(cfg.GetSection("AppVPilot").Get<AppVPilot.Settings>() ?? throw new ApplicationException("Invalid config file - VPilot config missing."));
+
+      var sett = cfg.GetSection("MainWindow").Get<MainWindow.Settings>() ?? throw new ApplicationException("Invalid config file - MainWindow config missing.");
+      this.Width = sett.StartupWindowSize[0];
+      this.Height = sett.StartupWindowSize[1];
+
+      this.Model = new ViewModel(this.appSimCon.State, this.appVPilot.State);
       this.DataContext = this.Model;
       this.logger = ELogging.Logger.Create(this, "MainWindow", false);
 
@@ -87,27 +99,28 @@ namespace Com2vPilotVolume
         Dispatcher.Invoke(() => ExtendLog(li));
       else
       {
-        txtOut.AppendText($"\n{DateTime.Now}\t{li.SenderName,-20}\t{li.Level,-12}\t{li.Message}");
+        txtOut.AppendText($"\n{DateTime.Now,-20}  {li.SenderName,-20}  {li.Level,-12}  {li.Message}");
         txtOut.ScrollToEnd();
       }
     }
 
+    private record ConfigLogRule(string Pattern, string Level);
+
     private void InitLog()
     {
-      List<LogRule> rules = new()
-      {
-        new LogRule(".*", true, true, true, true)
-      };
-      ELogging.Logger.RegisterLogAction(li => ExtendLog(li), rules);
+      var configRules = App.Configuration.GetSection("Logging:MainWindowOut:Rules");
+      List<ConfigLogRule> configLogRules = configRules.Get<List<ConfigLogRule>>() ?? throw new ApplicationException("Failed to load config - logging.");
+      List<LogRule> rules = configLogRules.Select(q => new LogRule(q.Pattern, q.Level)).ToList();
+      Logger.RegisterLogAction(li => ExtendLog(li), rules);
 
-      this.logger.Log(ELogging.LogLevel.INFO, "Log initialized");
+      this.logger.Log(LogLevel.INFO, "Log initialized");
     }
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-      this.logger.Log(ELogging.LogLevel.INFO, "Window_Loaded invoked");
+      this.logger.Log(LogLevel.INFO, "Window_Loaded invoked");
 
       this.appSimCon.Start();
-      this.appVPilotManager.Start();
+      this.appVPilot.Start();
     }
 
     #endregion Private Methods
@@ -115,9 +128,9 @@ namespace Com2vPilotVolume
     private void btnV_Click(object sender, RoutedEventArgs e)
     {
       Button btn = (Button)sender;
-      double v = double.Parse((string) btn.Tag) /  100;
+      double v = double.Parse((string)btn.Tag) / 100;
 
-      this.appVPilotManager.SetVolume(v);
+      this.appVPilot.SetVolume(v);
     }
   }
 }
