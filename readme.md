@@ -16,7 +16,7 @@ Fortunately, Windows OS is able to adjust output volume per application. This ap
 
 ## Instalation
 
-Simple unzip the release package to your custom folder. [.NET 6.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) is required to run the application (commonly installed on Windows OS by default).
+Simply unzip the release package to your custom folder. [.NET 6.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) is required to run the application (commonly installed on Windows OS by default).
 
 ## Usage
 
