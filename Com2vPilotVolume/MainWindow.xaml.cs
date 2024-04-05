@@ -66,7 +66,6 @@ namespace Com2vPilotVolume
     private readonly AppSimCon appSimCon;
     private readonly AppVPilot appVPilot;
     private readonly Logger logger;
-    private readonly bool showSimpleAdjustButtons;
 
     #endregion Private Fields
 
@@ -140,6 +139,20 @@ namespace Com2vPilotVolume
 
       this.appSimCon.Start();
       this.appVPilot.Start();
+
+      PrintAbout();
+    }
+
+    private void PrintAbout()
+    {
+      this.logger.Log(LogLevel.ALWAYS, " ");
+      this.logger.Log(LogLevel.ALWAYS, "FS2020 COM -> vPilot Volume");
+      this.logger.Log(LogLevel.ALWAYS, "Version: Beta");
+      this.logger.Log(LogLevel.ALWAYS, "Author: Marek Vajgl (engin@seznam.cz)");
+      this.logger.Log(LogLevel.ALWAYS, "Link: https://github.com/Engin1980/fs2020-com-to-vpilot-volume");
+      this.logger.Log(LogLevel.ALWAYS, " ");
+      this.logger.Log(LogLevel.ALWAYS, "Use at own risk ! ! !");
+      this.logger.Log(LogLevel.ALWAYS, " ");
     }
 
     #endregion Private Methods

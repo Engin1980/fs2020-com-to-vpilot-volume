@@ -9,6 +9,7 @@
         Title="FS2020 Com -> VPilot Volume" Height="450" Width="800"
         Loaded="Window_Loaded"
         Closed="Window_Closed"
+        Icon="icon.ico"
         Style="{StaticResource WinAll}">
   <Window.Resources>
     <wpfc:BoolToCustomSolidBrushConverter x:Key="BoolToCustomSolidBrushConverter" />
@@ -19,6 +20,7 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <Grid Grid.Row="0">
@@ -92,6 +94,5 @@
     <DockPanel Grid.Row="2">
       <TextBox x:Name="txtOut" MinLines="5" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" />
     </DockPanel>
-
   </Grid>
 </Window>
