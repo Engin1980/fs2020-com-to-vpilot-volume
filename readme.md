@@ -1,6 +1,6 @@
 # FS2020 COM Volume to vPilot Volume
 
-![Application Image](Wiki/Imgs/App.jpgx)
+![Application Image](Wiki/Imgs/App.jpg)
 
 ### What?
 
