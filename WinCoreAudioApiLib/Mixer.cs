@@ -57,7 +57,6 @@ namespace Eng.WinCoreAudioApiLib
       volume.GetMasterVolume(out float level);
 
       double ret = level;
-      logger.Log(LogLevel.INFO, $"Get Volume for {processId} returned {ret}");
       return ret;
     }
 
@@ -80,7 +79,7 @@ namespace Eng.WinCoreAudioApiLib
         ?? throw new MixerException($"Failed to get volume for '{processId}'.");
 
       Guid guid = Guid.Empty;
-      volume.SetMasterVolume((float)level, ref guid);
+      int tmp = volume.SetMasterVolume((float)level, ref guid);
     }
 
     private static double NormalizeLevel(double level)

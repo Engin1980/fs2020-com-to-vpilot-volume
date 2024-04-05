@@ -12,7 +12,7 @@ namespace eng.com2vPilotVolume.Types
 {
   public class AppVPilot
   {
-    public record Settings(int ConnectionTimerInterval, int ReadVolumeTimerInterval);
+    public record Settings(int ConnectionTimerInterval, int ReadVolumeTimerInterval, double VolumeMultiplier);
 
     #region Public Classes
 
@@ -64,6 +64,7 @@ namespace eng.com2vPilotVolume.Types
     private readonly Logger logger;
     private readonly Mixer mixer;
     private readonly System.Timers.Timer readVolumeTimer;
+    private readonly double volumeMultiplier;
 
     #endregion Private Fields
 
@@ -78,6 +79,8 @@ namespace eng.com2vPilotVolume.Types
     public AppVPilot(Settings settings)
     {
       this.logger = Logger.Create(this, nameof(AppVPilot));
+
+      this.volumeMultiplier = settings.VolumeMultiplier;
 
       this.connectionTimer = new System.Timers.Timer()
       {
@@ -104,11 +107,13 @@ namespace eng.com2vPilotVolume.Types
 
     public Action<Volume> GetVolumeUpdateCallback() => (q => this.SetVolume(q));
 
-    public void SetVolume(Volume v)
+    public void SetVolume(Volume volume)
     {
+      Volume multipliedVolume = volume * this.volumeMultiplier;
+      this.logger.Log(LogLevel.INFO, $"SetVolume requested with value {volume} mutliplied to {multipliedVolume}.");
       try
       {
-        this.mixer.SetVolume(this.State.VPilotProcess!.Id, v);
+        this.mixer.SetVolume(this.State.VPilotProcess!.Id, multipliedVolume);
       }
       catch (Exception ex)
       {
@@ -116,8 +121,8 @@ namespace eng.com2vPilotVolume.Types
         this.State.VPilotProcess = null;
         this.State.IsConnected = false;
         this.connectionTimer.Enabled = true;
-        this.logger.Log(LogLevel.WARNING, "Error setting volume of vPilot process, disconnected");
-        this.logger.Log(LogLevel.WARNING, "Error info: " + ex.Message);
+        this.logger.Log(LogLevel.ERROR, "Error setting volume of vPilot process, disconnected");
+        this.logger.Log(LogLevel.ERROR, "Error info: " + ex.Message);
         this.logger.Log(LogLevel.INFO, "Reconnecting after a while.");
       }
     }

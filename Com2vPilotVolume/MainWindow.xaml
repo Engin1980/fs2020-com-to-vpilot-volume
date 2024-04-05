@@ -6,11 +6,13 @@
         xmlns:local="clr-namespace:Com2vPilotVolume"
         xmlns:wpfc="clr-namespace:ESystem.WPF.Converters;assembly=ESystem.WPF"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
+        Title="FS2020 Com -> VPilot Volume" Height="450" Width="800"
         Loaded="Window_Loaded"
+        Closed="Window_Closed"
         Style="{StaticResource WinAll}">
   <Window.Resources>
     <wpfc:BoolToCustomSolidBrushConverter x:Key="BoolToCustomSolidBrushConverter" />
+    <wpfc:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
   </Window.Resources>
   <Grid>
     <Grid.RowDefinitions>
@@ -46,11 +48,7 @@
             <Label Content="Active Com Index:" Grid.Row="1" Grid.Column="0" />
             <Label Content="{Binding SimConState.ActiveComIndex}" Grid.Row="1" Grid.Column="1" />
             <Label Content="Active Com Volume:" Grid.Row="2" Grid.Column="0" />
-            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
-              <Label Content="{Binding SimConState.Volume}" Grid.Row="2" Grid.Column="1" />
-              <Button x:Name="btnV50" Content="50%" Tag="50" Click="btnV_Click" />
-              <Button x:Name="btnV100" Content="100%" Tag="100" Click="btnV_Click" />
-            </StackPanel>
+            <Label Content="{Binding SimConState.Volume}" Grid.Row="2" Grid.Column="1" />
 
           </Grid>
         </DockPanel>
@@ -74,7 +72,17 @@
             <Label Content="Process Id:" Grid.Row="1" Grid.Column="0" />
             <Label Content="{Binding VPilotState.VPilotProcess.Id}" Grid.Row="1" Grid.Column="1" />
             <Label Content="Current Volume:" Grid.Row="2" Grid.Column="0" />
-            <Label Content="{Binding VPilotState.Volume}" Grid.Row="2" Grid.Column="1" />
+            <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1">
+              <Label Content="{Binding VPilotState.Volume}" Grid.Row="2" Grid.Column="1" />
+              <StackPanel Orientation="Horizontal"
+                          Visibility="{Binding ShowSimpleAdjustButtons, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Button x:Name="btnV0" Content="0%" Tag="0" Click="btnV_Click" />
+                <Button x:Name="btnV10" Content="10%" Tag="10" Click="btnV_Click" />
+                <Button x:Name="btnV50" Content="50%" Tag="50" Click="btnV_Click" />
+                <Button x:Name="btnV100" Content="100%" Tag="100" Click="btnV_Click" />
+              </StackPanel>
+            </StackPanel>
+
           </Grid>
         </DockPanel>
       </GroupBox>
