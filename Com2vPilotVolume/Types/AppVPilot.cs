@@ -110,7 +110,7 @@ namespace eng.com2vPilotVolume.Types
     public void SetVolume(Volume volume)
     {
       Volume multipliedVolume = volume * this.volumeMultiplier;
-      this.logger.Log(LogLevel.INFO, $"SetVolume requested with value {volume} mutliplied to {multipliedVolume}.");
+      this.logger.Log(LogLevel.INFO, $"SetVolume requested with value {volume} multiplied to {multipliedVolume}.");
       try
       {
         this.mixer.SetVolume(this.State.VPilotProcess!.Id, multipliedVolume);

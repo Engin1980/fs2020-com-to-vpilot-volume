@@ -16,7 +16,9 @@ namespace eng.com2vPilotVolume.Types
   public class AppSimCon
   {
 
-    public record Settings(int NumberOfComs, int ConnectionTimerInterval, string ComVolumeVarPrefix, string ComTransmitVarPrefix);
+    public record Settings(int NumberOfComs, int ConnectionTimerInterval,
+      string ComVolumeVarPrefix, string ComTransmitVarPrefix,
+      int[] InitComTransmit, double[] InitComVolume);
 
     #region Public Classes
 
@@ -65,13 +67,13 @@ namespace eng.com2vPilotVolume.Types
     private readonly System.Timers.Timer connectionTimer;
     private readonly ESimConnect.ESimConnect eSimCon;
     private readonly ELogging.Logger logger;
-    private readonly int comCount;
+    private readonly int[] comVolumeTypeIds;
+    private readonly int[] comTransmitTypeIds;
     private readonly int[] comVolumeRequestIds;
     private readonly int[] comTransmitRequestIds;
     private readonly bool[] comTransmit;
     private readonly Volume[] comVolumes;
-    private readonly string comVolumeVarPrefix;
-    private readonly string comTransmitVarPrefix;
+    private readonly Settings settings;
 
     #endregion Private Fields
 
@@ -86,21 +88,24 @@ namespace eng.com2vPilotVolume.Types
 
     public AppSimCon(AppSimCon.Settings settings)
     {
+      EAssert.Argument.IsNotNull(settings, nameof(settings));
       EAssert.Argument.IsTrue(settings.NumberOfComs >= 1);
       EAssert.Argument.IsTrue(settings.ConnectionTimerInterval > 500);
 
-      this.comCount = settings.NumberOfComs;
-      this.comVolumeVarPrefix = settings.ComVolumeVarPrefix;
-      this.comTransmitVarPrefix = settings.ComTransmitVarPrefix;
+      this.settings = settings;
 
-      this.comVolumeRequestIds = new int[comCount];
-      this.comTransmitRequestIds = new int[comCount];
-      this.comTransmit = new bool[comCount];
-      this.comVolumes = new Volume[comCount];
-      for (int i = 0; i < comCount; i++)
+      this.comVolumeRequestIds = new int[settings.NumberOfComs];
+      this.comTransmitRequestIds = new int[settings.NumberOfComs];
+      this.comVolumeTypeIds = new int[settings.NumberOfComs];
+      this.comTransmitTypeIds = new int[settings.NumberOfComs];
+      this.comTransmit = new bool[settings.NumberOfComs];
+      this.comVolumes = new Volume[settings.NumberOfComs];
+      for (int i = 0; i < settings.NumberOfComs; i++)
       {
         this.comTransmitRequestIds[i] = INT_EMPTY;
         this.comVolumeRequestIds[i] = INT_EMPTY;
+        this.comTransmitTypeIds[i] = INT_EMPTY;
+        this.comVolumeTypeIds[i] = INT_EMPTY;
         this.comTransmit[i] = false;
         this.comVolumes[i] = 0;
       }
@@ -162,7 +167,7 @@ namespace eng.com2vPilotVolume.Types
     private void ESimCon_DataReceived(ESimConnect.ESimConnect sender, ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
       this.logger.Log(ELogging.LogLevel.DEBUG, $"Invoked data {e.RequestId}={e.Data}");
-      for (int i = 0; i < this.comCount; i++)
+      for (int i = 0; i < this.settings.NumberOfComs; i++)
       {
         if (e.RequestId == this.comVolumeRequestIds[i])
         {
@@ -195,21 +200,65 @@ namespace eng.com2vPilotVolume.Types
     {
       this.eSimCon.DataReceived += ESimCon_DataReceived;
 
-      for (int i = 0; i < this.comCount; i++)
+      for (int i = 0; i < this.settings.NumberOfComs; i++)
       {
-        string name = $"{comVolumeVarPrefix}{i + 1}";
+        string name = $"{settings.ComVolumeVarPrefix}{i + 1}";
         this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} VOLUME registering via {name}.");
         int typeId = this.eSimCon.RegisterPrimitive<double>(name);
+        this.comVolumeTypeIds[i] = typeId;
         this.eSimCon.RequestPrimitiveRepeatedly(typeId, out int requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
         this.comVolumeRequestIds[i] = requestId;
         this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} VOLUME registered via {name} as request {requestId}.");
 
-        name = $"{comTransmitVarPrefix}{i + 1}";
+        name = $"{settings.ComTransmitVarPrefix}{i + 1}";
         this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} TRANSMIT registering via {name}.");
         typeId = this.eSimCon.RegisterPrimitive<double>(name);
+        this.comTransmitTypeIds[i] = typeId;
         this.eSimCon.RequestPrimitiveRepeatedly(typeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
         this.comTransmitRequestIds[i] = requestId;
         this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} TRANSMIT registered via {name} as request {requestId}");
+      }
+
+      // IMPORTANT NOTE ABOUT "... / 2" below
+      // There is a bug in binding configuration to records causing array has double length
+      // https://github.com/dotnet/runtime/issues/83803
+
+      if (this.settings.InitComTransmit != null)
+      {
+        if (this.settings.InitComTransmit.Length / 2 > this.settings.NumberOfComs)
+          this.logger.Log(ELogging.LogLevel.WARNING, $"Settings error: Init COM transmit vector is longer ({this.settings.InitComTransmit.Length / 2}) than number of COMs ({this.settings.NumberOfComs}). Initialization skipped.");
+        else
+          for (int i = 0; i < this.settings.InitComTransmit.Length / 2; i++)
+          {
+            int val = this.settings.InitComTransmit[i];
+            if (val == -1) continue;
+            if (val != 0 && val != 1)
+            {
+              this.logger.Log(ELogging.LogLevel.WARNING, $"Config says transmit of COM {i + 1} should be set to {val}, but valid values are only -1/0/1. Skipping.");
+              continue;
+            }
+            this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} transmit to {val}");
+            this.eSimCon.SendPrimitive<double>(this.comTransmitTypeIds[i], val);
+          }
+      }
+
+      if (this.settings.InitComVolume != null)
+      {
+        if (this.settings.InitComVolume.Length / 2 > this.settings.NumberOfComs)
+          this.logger.Log(ELogging.LogLevel.WARNING, $"Settings error: Init COM volume vector is longer ({this.settings.InitComVolume.Length / 2}) than number of COMs ({this.settings.NumberOfComs}). Initialization skipped.");
+        else
+          for (int i = 0; i < this.settings.InitComVolume.Length / 2; i++)
+          {
+            double val = this.settings.InitComVolume[i];
+            if (val == -1) continue;
+            if (val < 0 || val > 1)
+            {
+              this.logger.Log(ELogging.LogLevel.WARNING, $"Config says volume of COM {i + 1} should be set to {val}, but valid values are only -1 or 0..1. Skipping.");
+              continue;
+            }
+            this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} volume to {val}");
+            this.eSimCon.SendPrimitive<double>(this.comVolumeTypeIds[i], val);
+          }
       }
     }
 
