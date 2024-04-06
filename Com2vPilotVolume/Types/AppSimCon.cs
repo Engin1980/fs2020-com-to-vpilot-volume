@@ -17,7 +17,7 @@ namespace eng.com2vPilotVolume.Types
   {
 
     public record Settings(int NumberOfComs, int ConnectionTimerInterval,
-      string ComVolumeVarPrefix, string ComTransmitVarPrefix,
+      string ComVolumeVar, string ComTransmitVar,
       int[] InitComTransmit, double[] InitComVolume);
 
     #region Public Classes
@@ -202,7 +202,7 @@ namespace eng.com2vPilotVolume.Types
 
       for (int i = 0; i < this.settings.NumberOfComs; i++)
       {
-        string name = $"{settings.ComVolumeVarPrefix}{i + 1}";
+        string name = settings.ComVolumeVar.Replace("{i}", i.ToString());
         this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} VOLUME registering via {name}.");
         int typeId = this.eSimCon.RegisterPrimitive<double>(name);
         this.comVolumeTypeIds[i] = typeId;
@@ -210,7 +210,7 @@ namespace eng.com2vPilotVolume.Types
         this.comVolumeRequestIds[i] = requestId;
         this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} VOLUME registered via {name} as request {requestId}.");
 
-        name = $"{settings.ComTransmitVarPrefix}{i + 1}";
+        name = settings.ComTransmitVar.Replace("{i}", i.ToString());
         this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} TRANSMIT registering via {name}.");
         typeId = this.eSimCon.RegisterPrimitive<double>(name);
         this.comTransmitTypeIds[i] = typeId;
