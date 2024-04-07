@@ -151,8 +151,8 @@ keys in config:
 ```
 
 Rules:
-* The number of elements in the set must equal to `AppSimCon.NumberOfComs`.
-* Value `-1` always means "do nothing, skip initialization" and continue with the next item.
+* The number of elements in the list must equal to `AppSimCon.NumberOfComs`.
+* Value `-1` always means "do nothing, skip initialization and continue with the next item".
 * For volume, float values 0..1 define the initial state. E.g., `0.5` initializes volume
   to 50&nbsp;%.
 * For transmit, integer values 0/1 define the initial state: 0 - not active, 1 - active.
@@ -204,4 +204,6 @@ None yet.
 
 Created by Marek Vajgl.
 
-Report issues via the `Issues` tab on the project GitHub pages.
+Project pages: https://github.com/Engin1980/fs2020-com-to-vpilot-volume
+
+Report issues via the [`Issues`](https://github.com/Engin1980/fs2020-com-to-vpilot-volume/issues) tab on the project GitHub pages.
