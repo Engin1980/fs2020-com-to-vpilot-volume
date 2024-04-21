@@ -149,33 +149,14 @@ namespace Com2vPilotVolume
       this.logger.Log(LogLevel.ALWAYS, " ");
 
       var assembly = Assembly.GetExecutingAssembly();
-      var assemblyName = assembly.GetName();
       FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-      var companyName = fvi.CompanyName;
-      var productName = fvi.ProductName;
-      var productVersion = fvi.ProductVersion;
-
-      string assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-      //assemblyVersion = Assembly.LoadFile("your assembly file").GetName().Version.ToString();
-      //string fileVersion = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
-      //string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion;
-
-      this.logger.Log(LogLevel.ALWAYS, assembly.GetName().Name ?? "?");
-      this.logger.Log(LogLevel.ALWAYS, assembly.GetName().FullName ?? "?");
-      this.logger.Log(LogLevel.ALWAYS, assembly.GetName().Version!.ToString() ?? "?");
-
-      this.logger.Log(LogLevel.ALWAYS, "---");
-      this.logger.Log(LogLevel.ALWAYS, fvi.ProductName);
-      this.logger.Log(LogLevel.ALWAYS, fvi.CompanyName);
-      this.logger.Log(LogLevel.ALWAYS, fvi.ProductVersion);
-
-      this.logger.Log(LogLevel.ALWAYS, "---");
-      this.logger.Log(LogLevel.ALWAYS, "FS2020 COM -> vPilot Volume");
-      this.logger.Log(LogLevel.ALWAYS, "Version: Beta");
-      this.logger.Log(LogLevel.ALWAYS, "Author: Marek Vajgl (engin@seznam.cz)");
-      this.logger.Log(LogLevel.ALWAYS, "Link: https://github.com/Engin1980/fs2020-com-to-vpilot-volume");
+      this.logger.Log(LogLevel.ALWAYS, fvi.ProductName!);
       this.logger.Log(LogLevel.ALWAYS, " ");
-      this.logger.Log(LogLevel.ALWAYS, "Use at own risk ! ! !");
+      this.logger.Log(LogLevel.ALWAYS, $"Version: \t{fvi.FileMajorPart}.{fvi.FileMinorPart}.{fvi.FileBuildPart}");
+      this.logger.Log(LogLevel.ALWAYS, "Author: \tMarek Vajgl (engin@seznam.cz)");
+      this.logger.Log(LogLevel.ALWAYS, "Link: \t\thttps://github.com/Engin1980/fs2020-com-to-vpilot-volume");
+      this.logger.Log(LogLevel.ALWAYS, " ");
+      this.logger.Log(LogLevel.ALWAYS, "! ! ! Use at own risk ! ! !");
       this.logger.Log(LogLevel.ALWAYS, " ");
     }
 

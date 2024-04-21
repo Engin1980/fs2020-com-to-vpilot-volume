@@ -16,7 +16,7 @@ namespace eng.com2vPilotVolume.Types
   public class AppSimCon
   {
 
-    public record Settings(int NumberOfComs, int ConnectionTimerInterval,
+    public record Settings(int NumberOfComs, int ConnectionTimerInterval, string InitializedCheckVar,
       string ComVolumeVar, string ComTransmitVar,
       int[] InitComTransmit, double[] InitComVolume);
 
@@ -211,7 +211,7 @@ namespace eng.com2vPilotVolume.Types
           throw new ApplicationException("Failed to register simcon definitions.", ex);
         }
       }
-      catch (Exception ex)
+      catch
       {
         // intentionally blank
         this.logger.Log(ELogging.LogLevel.INFO, "Connection failed, will retry after a while...");
@@ -260,10 +260,10 @@ namespace eng.com2vPilotVolume.Types
 
     private void ProcessLatDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
-      this.logger.Log(ELogging.LogLevel.INFO, $"Latitude value obtained as {e.Data}");
+      this.logger.Log(ELogging.LogLevel.INFO, $"Init-check-var value obtained as {e.Data}");
       if (e.Data is double val && val != 0)
       {
-        this.logger.Log(ELogging.LogLevel.INFO, $"Latitude value valid, confirming connection.");
+        this.logger.Log(ELogging.LogLevel.INFO, $"Init-check-var value valid, confirming connection.");
         this.State.ConnectionStatus = EConnectionStatus.ConnectedWithData;
         this.connectionTimer.Enabled = false;
 
@@ -275,7 +275,8 @@ namespace eng.com2vPilotVolume.Types
     {
       EAssert.IsTrue(this.latTypeId == INT_EMPTY);
 
-      string name = "PLANE LATITUDE";
+      this.logger.Log(ELogging.LogLevel.INFO, $"Registering init-check-var, confirming connection.");
+      string name = this.settings.InitializedCheckVar;
       this.latTypeId = this.eSimCon.RegisterPrimitive<double>(name);
     }
 
