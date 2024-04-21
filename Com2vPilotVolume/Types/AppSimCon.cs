@@ -20,6 +20,13 @@ namespace eng.com2vPilotVolume.Types
       string ComVolumeVar, string ComTransmitVar,
       int[] InitComTransmit, double[] InitComVolume);
 
+    public enum EConnectionStatus
+    {
+      NotConnected,
+      ConnectedNoData,
+      ConnectedWithData
+    }
+
     #region Public Classes
 
     public class StateViewModel : NotifyPropertyChangedBase
@@ -36,12 +43,31 @@ namespace eng.com2vPilotVolume.Types
       public bool IsConnected
       {
         get => base.GetProperty<bool>(nameof(IsConnected))!;
-        set => base.UpdateProperty(nameof(IsConnected), value);
+        private set => base.UpdateProperty(nameof(IsConnected), value);
       }
       public Volume Volume
       {
         get => base.GetProperty<Volume>(nameof(Volume))!;
         set => base.UpdateProperty(nameof(Volume), value);
+      }
+      public string ConnectionStatusText
+      {
+        get => base.GetProperty<string>(nameof(ConnectionStatusText))!;
+        private set => base.UpdateProperty(nameof(ConnectionStatusText), value);
+      }
+      public EConnectionStatus ConnectionStatus
+      {
+        get => base.GetProperty<EConnectionStatus>(nameof(ConnectionStatus))!;
+        set
+        {
+          base.UpdateProperty(nameof(ConnectionStatus), value);
+          this.ConnectionStatusText = value == EConnectionStatus.NotConnected
+            ? "No connection to FS2020"
+            : value == EConnectionStatus.ConnectedNoData
+            ? "Connected to FS2020, but not initialized"
+            : "Connected to FS2020";
+          this.IsConnected = value == EConnectionStatus.ConnectedWithData;
+        }
       }
 
       #endregion Public Properties
@@ -52,7 +78,7 @@ namespace eng.com2vPilotVolume.Types
       {
         this.ActiveComIndex = -1;
         this.Volume = 0;
-        this.IsConnected = false;
+        this.ConnectionStatus = EConnectionStatus.NotConnected;
       }
 
       #endregion Public Constructors
@@ -72,6 +98,8 @@ namespace eng.com2vPilotVolume.Types
     private readonly int[] comVolumeRequestIds;
     private readonly int[] comTransmitRequestIds;
     private readonly bool[] comTransmit;
+    private int latTypeId = INT_EMPTY;
+    private int latRequestId = INT_EMPTY;
     private readonly Volume[] comVolumes;
     private readonly Settings settings;
 
@@ -112,6 +140,7 @@ namespace eng.com2vPilotVolume.Types
 
       this.logger = ELogging.Logger.Create(this, nameof(AppSimCon));
       this.eSimCon = new();
+      this.eSimCon.Disconnected += ESimCon_Disconnected;
 
       this.connectionTimer = new System.Timers.Timer()
       {
@@ -120,6 +149,13 @@ namespace eng.com2vPilotVolume.Types
         Enabled = false
       };
       this.connectionTimer.Elapsed += ConnectionTimer_Elapsed;
+    }
+
+    private void ESimCon_Disconnected(ESimConnect.ESimConnect sender)
+    {
+      this.logger.Log(ELogging.LogLevel.WARNING, "FS2020 disconnected. Retrying connection...");
+      this.State.ConnectionStatus = EConnectionStatus.NotConnected;
+      this.connectionTimer.Enabled = true;
     }
 
     #endregion Public Constructors
@@ -137,8 +173,26 @@ namespace eng.com2vPilotVolume.Types
 
     private void ConnectionTimer_Elapsed(object? sender, ElapsedEventArgs e)
     {
-      this.logger.Log(ELogging.LogLevel.INFO, "Reconnecting...");
+      switch (this.State.ConnectionStatus)
+      {
+        case EConnectionStatus.NotConnected:
+          this.logger.Log(ELogging.LogLevel.INFO, "Reconnecting...");
+          InitSimConConnection(); break;
+        case EConnectionStatus.ConnectedNoData:
+          this.logger.Log(ELogging.LogLevel.INFO, "Checking simvar status...");
+          InitSimConCheckLatitude();
+          break;
+      }
+    }
 
+    private void InitSimConCheckLatitude()
+    {
+      EAssert.IsTrue(this.latTypeId != INT_EMPTY);
+      this.eSimCon.RequestPrimitive(this.latTypeId, out this.latRequestId);
+    }
+
+    private void InitSimConConnection()
+    {
       try
       {
         this.eSimCon.Open();
@@ -146,10 +200,10 @@ namespace eng.com2vPilotVolume.Types
         // on success:
         try
         {
-          RegisterToSimCon();
-          this.connectionTimer.Enabled = false;
+          RegisterLocationTypesToSim();
+          RegisterComTypesToSimCon();
           this.logger.Log(ELogging.LogLevel.INFO, "Connection enabled.");
-          this.State.IsConnected = true;
+          this.State.ConnectionStatus = EConnectionStatus.ConnectedNoData;
         }
         catch (Exception ex)
         {
@@ -167,6 +221,14 @@ namespace eng.com2vPilotVolume.Types
     private void ESimCon_DataReceived(ESimConnect.ESimConnect sender, ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
       this.logger.Log(ELogging.LogLevel.DEBUG, $"Invoked data {e.RequestId}={e.Data}");
+      if (this.latRequestId != INT_EMPTY && this.latRequestId == e.RequestId)
+        ProcessLatDataReceived(e);
+      else
+        ProcessComDataReceived(e);
+    }
+
+    private void ProcessComDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
+    {
       for (int i = 0; i < this.settings.NumberOfComs; i++)
       {
         if (e.RequestId == this.comVolumeRequestIds[i])
@@ -196,7 +258,28 @@ namespace eng.com2vPilotVolume.Types
       }
     }
 
-    private void RegisterToSimCon()
+    private void ProcessLatDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
+    {
+      this.logger.Log(ELogging.LogLevel.INFO, $"Latitude value obtained as {e.Data}");
+      if (e.Data is double val && val != 0)
+      {
+        this.logger.Log(ELogging.LogLevel.INFO, $"Latitude value valid, confirming connection.");
+        this.State.ConnectionStatus = EConnectionStatus.ConnectedWithData;
+        this.connectionTimer.Enabled = false;
+
+        InitializeComTypesToSimCon();
+      }
+    }
+
+    private void RegisterLocationTypesToSim()
+    {
+      EAssert.IsTrue(this.latTypeId == INT_EMPTY);
+
+      string name = "PLANE LATITUDE";
+      this.latTypeId = this.eSimCon.RegisterPrimitive<double>(name);
+    }
+
+    private void RegisterComTypesToSimCon()
     {
       this.eSimCon.DataReceived += ESimCon_DataReceived;
 
@@ -218,7 +301,10 @@ namespace eng.com2vPilotVolume.Types
         this.comTransmitRequestIds[i] = requestId;
         this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} TRANSMIT registered via {name} as request {requestId}");
       }
+    }
 
+    private void InitializeComTypesToSimCon()
+    {
       // IMPORTANT NOTE ABOUT "... / 2" below
       // There is a bug in binding configuration to records causing array has double length
       // https://github.com/dotnet/runtime/issues/83803

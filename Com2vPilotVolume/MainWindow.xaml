@@ -43,14 +43,17 @@
               <RowDefinition />
               <RowDefinition />
               <RowDefinition />
+              <RowDefinition />
             </Grid.RowDefinitions>
             <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
             <Label Content="{Binding SimConState.IsConnected}" 
                  Grid.Row="0" Grid.Column="1" />
-            <Label Content="Active Com Index:" Grid.Row="1" Grid.Column="0" />
-            <Label Content="{Binding SimConState.ActiveComIndex}" Grid.Row="1" Grid.Column="1" />
-            <Label Content="Active Com Volume:" Grid.Row="2" Grid.Column="0" />
-            <Label Content="{Binding SimConState.Volume}" Grid.Row="2" Grid.Column="1" />
+            <Label Content="Connection status:" Grid.Row="1" Grid.Column="0" />
+            <Label Content="{Binding SimConState.ConnectionStatusText}" Grid.Row="1" Grid.Column="1" />
+            <Label Content="Active Com Index:" Grid.Row="2" Grid.Column="0" />
+            <Label Content="{Binding SimConState.ActiveComIndex}" Grid.Row="2" Grid.Column="1" />
+            <Label Content="Active Com Volume:" Grid.Row="3" Grid.Column="0" />
+            <Label Content="{Binding SimConState.Volume}" Grid.Row="3" Grid.Column="1" />
 
           </Grid>
         </DockPanel>
@@ -67,6 +70,7 @@
               <RowDefinition />
               <RowDefinition />
               <RowDefinition />
+              <RowDefinition />
             </Grid.RowDefinitions>
             <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
             <Label Content="{Binding VPilotState.IsConnected}" 
@@ -74,8 +78,8 @@
             <Label Content="Process Id:" Grid.Row="1" Grid.Column="0" />
             <Label Content="{Binding VPilotState.VPilotProcess.Id}" Grid.Row="1" Grid.Column="1" />
             <Label Content="Current Volume:" Grid.Row="2" Grid.Column="0" />
-            <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1">
-              <Label Content="{Binding VPilotState.Volume}" Grid.Row="2" Grid.Column="1" />
+            <Label Content="{Binding VPilotState.Volume}" Grid.Row="2" Grid.Column="1" />
+            <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1">
               <StackPanel Orientation="Horizontal"
                           Visibility="{Binding ShowSimpleAdjustButtons, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Button x:Name="btnV0" Content="0%" Tag="0" Click="btnV_Click" />

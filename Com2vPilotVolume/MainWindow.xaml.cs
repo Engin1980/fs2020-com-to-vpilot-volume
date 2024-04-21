@@ -16,6 +16,7 @@ using ESystem.Asserting;
 using Microsoft.Extensions.Configuration;
 using ELogging;
 using ESystem.Miscelaneous;
+using System.Reflection;
 
 namespace Com2vPilotVolume
 {
@@ -146,6 +147,29 @@ namespace Com2vPilotVolume
     private void PrintAbout()
     {
       this.logger.Log(LogLevel.ALWAYS, " ");
+
+      var assembly = Assembly.GetExecutingAssembly();
+      var assemblyName = assembly.GetName();
+      FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+      var companyName = fvi.CompanyName;
+      var productName = fvi.ProductName;
+      var productVersion = fvi.ProductVersion;
+
+      string assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+      //assemblyVersion = Assembly.LoadFile("your assembly file").GetName().Version.ToString();
+      //string fileVersion = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
+      //string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion;
+
+      this.logger.Log(LogLevel.ALWAYS, assembly.GetName().Name ?? "?");
+      this.logger.Log(LogLevel.ALWAYS, assembly.GetName().FullName ?? "?");
+      this.logger.Log(LogLevel.ALWAYS, assembly.GetName().Version!.ToString() ?? "?");
+
+      this.logger.Log(LogLevel.ALWAYS, "---");
+      this.logger.Log(LogLevel.ALWAYS, fvi.ProductName);
+      this.logger.Log(LogLevel.ALWAYS, fvi.CompanyName);
+      this.logger.Log(LogLevel.ALWAYS, fvi.ProductVersion);
+
+      this.logger.Log(LogLevel.ALWAYS, "---");
       this.logger.Log(LogLevel.ALWAYS, "FS2020 COM -> vPilot Volume");
       this.logger.Log(LogLevel.ALWAYS, "Version: Beta");
       this.logger.Log(LogLevel.ALWAYS, "Author: Marek Vajgl (engin@seznam.cz)");

@@ -1,7 +1,11 @@
+set "local=%cd%"
+
 cd ..\..\ESystem.NET
 call .\updateRelease.bat
 
-cd C:\Users\Vajgl\source\repos\fs2020-com-to-vpilot-volume\DLLs
+cd %local%
 copy ..\..\ESystem.NET\_Release\* .\
 
 del updateRelease.bat
+
+pause
