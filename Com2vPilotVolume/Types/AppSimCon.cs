@@ -159,7 +159,7 @@ namespace eng.com2vPilotVolume.Types
         this.comVolumeTypeIds[i] = INT_EMPTY;
         this.comTransmit[i] = false;
         this.comVolumes[i] = 0;
-        this.comFrequencies[i] = new SimVar<double>($"COM ACTIVE FREQUENCY:{i}");
+        this.comFrequencies[i] = new SimVar<double>($"COM ACTIVE FREQUENCY:{i + 1}");
       }
 
       this.logger = ELogging.Logger.Create(this, nameof(AppSimCon));
@@ -244,7 +244,7 @@ namespace eng.com2vPilotVolume.Types
 
     private void ESimCon_DataReceived(ESimConnect.ESimConnect sender, ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
-      this.logger.Log(ELogging.LogLevel.DEBUG, $"Invoked data {e.RequestId}={e.Data}");
+      this.logger.Log(ELogging.LogLevel.INFO, $"Received data {e.RequestId}={e.Data}");
       if (this.latRequestId != INT_EMPTY && this.latRequestId == e.RequestId)
         ProcessLatDataReceived(e);
       else if (this.comFrequencies.Any(q => q.RequestId == e.RequestId))
@@ -255,18 +255,24 @@ namespace eng.com2vPilotVolume.Types
 
     private void ProcessFreqDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
+      this.logger.Log(ELogging.LogLevel.DEBUG, $"Frequency changed data received as {e.Data}");
       SimVar<double> cf = this.comFrequencies.First(q => q.RequestId == e.RequestId);
-      cf.Value = (double)e.Data;
+      cf.Value = (double)e.Data / 1e6;
       if (this.FrequencyChangedCallback is not null)
       {
         int index = Array.IndexOf(this.comFrequencies, cf);
         if (this.comTransmit[index])
+        {
+          this.State.ActiveComFrequency = cf.Value;
           this.FrequencyChangedCallback(cf.Value);
+        }
+          
       }
     }
 
     private void ProcessComDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
+      this.logger.Log(ELogging.LogLevel.DEBUG, $"(Probably) com-related value obtained as {e.Data}");
       for (int i = 0; i < this.settings.NumberOfComs; i++)
       {
         if (e.RequestId == this.comVolumeRequestIds[i])
@@ -298,7 +304,7 @@ namespace eng.com2vPilotVolume.Types
 
     private void ProcessLatDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
-      this.logger.Log(ELogging.LogLevel.INFO, $"Init-check-var value obtained as {e.Data}");
+      this.logger.Log(ELogging.LogLevel.DEBUG, $"Init-check-var value obtained as {e.Data}");
       if (e.Data is double val && val != 0)
       {
         this.logger.Log(ELogging.LogLevel.INFO, $"Init-check-var value valid, confirming connection.");
@@ -346,7 +352,7 @@ namespace eng.com2vPilotVolume.Types
         cf.TypeId = this.eSimCon.RegisterPrimitive<double>(cf.Name);
         this.eSimCon.RequestPrimitiveRepeatedly(cf.TypeId, out tmp, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SECOND, true);
         cf.RequestId = tmp;
-        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} FREQU registered via {cf.RegInfo}");
+        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} FREQ registered via {cf.RegInfo}");
       }
     }
 

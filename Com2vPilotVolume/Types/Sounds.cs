@@ -23,7 +23,7 @@ namespace eng.com2vPilotVolume.Types
     {
       EAssert.Argument.IsNotNull(settings, nameof(settings));
       this.settings = settings;
-      this.logger = ELogging.Logger.Create(this);
+      this.logger = ELogging.Logger.Create(this, "Sound");
     }
 
     public void PlayVolumeMax()
@@ -48,24 +48,27 @@ namespace eng.com2vPilotVolume.Types
 
     private void TryPlayMP3File(string? fileName, Volume volume)
     {
+      logger.Log(ELogging.LogLevel.DEBUG, $"Request to play {fileName} at volume {volume}.");
+
       if (fileName == null) return;
 
       if (System.IO.File.Exists(fileName) == false)
       {
         logger.Log(ELogging.LogLevel.WARNING, $"File {fileName} not found, playing skipped.");
       }
-      try
-      {
-        var reader = new Mp3FileReader(fileName);
-        var waveOut = new WaveOut();
-        waveOut.Init(reader);
-        waveOut.Volume = (float)volume;
-        waveOut.Play();
-      }
-      catch (Exception ex)
-      {
-        logger.Log(ELogging.LogLevel.WARNING, $"File {fileName} cannot be played. Reason: {ex.Message}");
-      }
+      else
+        try
+        {
+          var reader = new Mp3FileReader(fileName);
+          var waveOut = new WaveOut();
+          waveOut.Init(reader);
+          waveOut.Volume = (float)volume;
+          waveOut.Play();
+        }
+        catch (Exception ex)
+        {
+          logger.Log(ELogging.LogLevel.WARNING, $"File {fileName} cannot be played. Reason: {ex.Message}");
+        }
     }
   }
 }
