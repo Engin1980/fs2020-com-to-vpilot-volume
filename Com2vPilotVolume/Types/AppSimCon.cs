@@ -18,7 +18,7 @@ namespace eng.com2vPilotVolume.Types
   {
     public record Settings(int NumberOfComs, int ConnectionTimerInterval, string InitializedCheckVar,
       string ComVolumeVar, string ComTransmitVar, string ComFrequencyVar,
-      int[] InitComTransmit, double[] InitComVolume);
+      int[] InitComTransmit, double[] InitComVolume, double[] InitComFrequency);
 
     public enum EConnectionStatus
     {
@@ -389,8 +389,30 @@ namespace eng.com2vPilotVolume.Types
             this.eSimCon.SendPrimitive<double>(this.comVolumes[i].TypeId, val);
           }
       }
-    }
 
+      if (this.settings.InitComFrequency != null)
+      {
+        if (this.settings.InitComFrequency.Length / 2 > this.settings.NumberOfComs)
+          this.logger.Log(ELogging.LogLevel.WARNING, $"Settings error: Init COM frequency vector is longer ({this.settings.InitComFrequency.Length / 2}) than number of COMs ({this.settings.NumberOfComs}). Initialization skipped.");
+        else
+          for (int i = 0; i < this.settings.InitComFrequency.Length / 2; i++)
+          {
+            double val = this.settings.InitComFrequency[i];
+            if (val == -1) continue;
+            if (val < MIN_COM_FREQUENCY || val > MAX_COM_FREQUENCY)
+            {
+              this.logger.Log(ELogging.LogLevel.WARNING, $"Config says frequency of COM {i + 1} should be set to {val}, but valid values are only -1 or {MIN_COM_FREQUENCY}..{MAX_COM_FREQUENCY}. Skipping.");
+              continue;
+            }
+            this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} frequency to {val}");
+            string name = (i == 0) ? "COM RADIO SET" : $"COM{i + 1} RADIO SET";
+            uint value = (uint)(val * 1000000);
+            this.eSimCon.SendClientEvent(name, new uint[] { value });
+          }
+      }
+    }
+    private const double MIN_COM_FREQUENCY = 118.000;
+    private const double MAX_COM_FREQUENCY = 136.975;
     private void StartIfNotConnected()
     {
       if (connectionTimer.Enabled) return;
