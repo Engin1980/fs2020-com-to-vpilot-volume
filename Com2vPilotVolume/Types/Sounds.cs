@@ -12,7 +12,10 @@ namespace eng.com2vPilotVolume.Types
 {
   public class Sounds
   {
-    public record Settings(string? MaxVolumeFile, string? MinVolumeFile, string? FrequencyChangedFile, string? ComChangedFile);
+    public record Settings(string? MaxVolumeFile, double MaxVolumeFileVolume,
+      string? MinVolumeFile, double MinVolumeFileVolume,
+      string? FrequencyChangedFile, double FrequencyChangedFileVolume,
+      string? ComChangedFile, double ComChangedFileVolume);
 
     private readonly Settings settings;
     private readonly ELogging.Logger logger;
@@ -25,25 +28,25 @@ namespace eng.com2vPilotVolume.Types
 
     public void PlayVolumeMax()
     {
-      TryPlayMP3File(settings.MaxVolumeFile);
+      TryPlayMP3File(settings.MaxVolumeFile, settings.MaxVolumeFileVolume);
     }
 
     public void PlayVolumeMin()
     {
-      TryPlayMP3File(settings.MinVolumeFile);
+      TryPlayMP3File(settings.MinVolumeFile, settings.MinVolumeFileVolume);
     }
 
     public void PlayFrequencyChanged()
     {
-      TryPlayMP3File(settings.FrequencyChangedFile);
+      TryPlayMP3File(settings.FrequencyChangedFile, settings.FrequencyChangedFileVolume);
     }
 
     public void PlayComChanged()
     {
-      TryPlayMP3File(settings.ComChangedFile);
+      TryPlayMP3File(settings.ComChangedFile, settings.ComChangedFileVolume);
     }
 
-    private void TryPlayMP3File(string? fileName)
+    private void TryPlayMP3File(string? fileName, Volume volume)
     {
       if (fileName == null) return;
 
@@ -56,6 +59,7 @@ namespace eng.com2vPilotVolume.Types
         var reader = new Mp3FileReader(fileName);
         var waveOut = new WaveOut();
         waveOut.Init(reader);
+        waveOut.Volume = (float)volume;
         waveOut.Play();
       }
       catch (Exception ex)

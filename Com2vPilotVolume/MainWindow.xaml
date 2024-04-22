@@ -44,6 +44,7 @@
               <RowDefinition />
               <RowDefinition />
               <RowDefinition />
+              <RowDefinition />
             </Grid.RowDefinitions>
             <Label Content="Is connected:" Grid.Row="0" Grid.Column="0" />
             <Label Content="{Binding SimConState.IsConnected}" 
@@ -53,8 +54,9 @@
             <Label Content="Active Com Index:" Grid.Row="2" Grid.Column="0" />
             <Label Content="{Binding SimConState.ActiveComIndex}" Grid.Row="2" Grid.Column="1" />
             <Label Content="Active Com Volume:" Grid.Row="3" Grid.Column="0" />
-            <Label Content="{Binding SimConState.Volume}" Grid.Row="3" Grid.Column="1" />
-
+            <Label Content="{Binding SimConState.ActiveComVolume}" Grid.Row="3" Grid.Column="1" />
+            <Label Content="Active Com Frequency:" Grid.Row="4" Grid.Column="0" />
+            <Label Content="{Binding SimConState.ActiveComFrequency}" Grid.Row="4" Grid.Column="1" />
           </Grid>
         </DockPanel>
       </GroupBox>

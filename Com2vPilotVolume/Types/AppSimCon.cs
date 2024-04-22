@@ -16,7 +16,6 @@ namespace eng.com2vPilotVolume.Types
 {
   public class AppSimCon
   {
-    https://onlinetonegenerator.com/multiple-tone-generator.html
     public record Settings(int NumberOfComs, int ConnectionTimerInterval, string InitializedCheckVar,
       string ComVolumeVar, string ComTransmitVar,
       int[] InitComTransmit, double[] InitComVolume);
@@ -60,10 +59,15 @@ namespace eng.com2vPilotVolume.Types
         get => base.GetProperty<bool>(nameof(IsConnected))!;
         private set => base.UpdateProperty(nameof(IsConnected), value);
       }
-      public Volume Volume
+      public Volume ActiveComVolume
       {
-        get => base.GetProperty<Volume>(nameof(Volume))!;
-        set => base.UpdateProperty(nameof(Volume), value);
+        get => base.GetProperty<Volume>(nameof(ActiveComVolume))!;
+        set => base.UpdateProperty(nameof(ActiveComVolume), value);
+      }
+      public double ActiveComFrequency
+      {
+        get => base.GetProperty<double>(nameof(ActiveComFrequency))!;
+        set => base.UpdateProperty(nameof(ActiveComFrequency), value);
       }
       public string ConnectionStatusText
       {
@@ -92,7 +96,7 @@ namespace eng.com2vPilotVolume.Types
       public StateViewModel()
       {
         this.ActiveComIndex = -1;
-        this.Volume = 0;
+        this.ActiveComVolume = 0;
         this.ConnectionStatus = EConnectionStatus.NotConnected;
       }
 
@@ -273,7 +277,7 @@ namespace eng.com2vPilotVolume.Types
           if (this.comTransmit[i])
           {
             this.logger.Log(ELogging.LogLevel.INFO, $"Sending new volume {this.comVolumes[i]} to vPilot");
-            this.State.Volume = this.comVolumes[i];
+            this.State.ActiveComVolume = this.comVolumes[i];
             this.VolumeUpdateCallback?.Invoke(this.comVolumes[i]);
           }
         }
@@ -285,7 +289,7 @@ namespace eng.com2vPilotVolume.Types
           {
             this.logger.Log(ELogging.LogLevel.INFO, $"Sending new volume {this.comVolumes[i]} to vPilot");
             this.State.ActiveComIndex = i + 1;
-            this.State.Volume = this.comVolumes[i];
+            this.State.ActiveComVolume = this.comVolumes[i];
             this.VolumeUpdateCallback?.Invoke(this.comVolumes[i]);
           }
         }
