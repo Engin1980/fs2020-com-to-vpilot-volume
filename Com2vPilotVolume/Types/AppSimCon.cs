@@ -1,5 +1,6 @@
 ﻿using ESimConnect;
 using ESystem.Asserting;
+using ESystem.ValidityChecking;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
@@ -15,7 +16,7 @@ namespace eng.com2vPilotVolume.Types
 {
   public class AppSimCon
   {
-
+    https://onlinetonegenerator.com/multiple-tone-generator.html
     public record Settings(int NumberOfComs, int ConnectionTimerInterval, string InitializedCheckVar,
       string ComVolumeVar, string ComTransmitVar,
       int[] InitComTransmit, double[] InitComVolume);
@@ -25,6 +26,20 @@ namespace eng.com2vPilotVolume.Types
       NotConnected,
       ConnectedNoData,
       ConnectedWithData
+    }
+
+    private class SimVar<T>
+    {
+      public int TypeId { get; set; } = INT_EMPTY;
+      public int RequestId { get; set; } = INT_EMPTY;
+      public string Name { get; set; }
+      public T? Value { get; set; }
+      public string RegInfo => $"{Name} (tp:{TypeId}, req:{RequestId})";
+
+      public SimVar(string name)
+      {
+        this.Name = name;
+      }
     }
 
     #region Public Classes
@@ -102,6 +117,7 @@ namespace eng.com2vPilotVolume.Types
     private int latRequestId = INT_EMPTY;
     private readonly Volume[] comVolumes;
     private readonly Settings settings;
+    private readonly SimVar<double>[] comFrequencies;
 
     #endregion Private Fields
 
@@ -109,6 +125,8 @@ namespace eng.com2vPilotVolume.Types
 
     public StateViewModel State { get; } = new();
     public Action<Volume>? VolumeUpdateCallback { get; set; }
+    public Action<int>? ActiveComChangedCallback { get; set; }
+    public Action<double>? FrequencyChangedCallback { get; set; }
 
     #endregion Public Properties
 
@@ -128,6 +146,7 @@ namespace eng.com2vPilotVolume.Types
       this.comTransmitTypeIds = new int[settings.NumberOfComs];
       this.comTransmit = new bool[settings.NumberOfComs];
       this.comVolumes = new Volume[settings.NumberOfComs];
+      this.comFrequencies = new SimVar<double>[settings.NumberOfComs];
       for (int i = 0; i < settings.NumberOfComs; i++)
       {
         this.comTransmitRequestIds[i] = INT_EMPTY;
@@ -136,6 +155,7 @@ namespace eng.com2vPilotVolume.Types
         this.comVolumeTypeIds[i] = INT_EMPTY;
         this.comTransmit[i] = false;
         this.comVolumes[i] = 0;
+        this.comFrequencies[i] = new SimVar<double>($"COM ACTIVE FREQUENCY:{i}");
       }
 
       this.logger = ELogging.Logger.Create(this, nameof(AppSimCon));
@@ -223,8 +243,22 @@ namespace eng.com2vPilotVolume.Types
       this.logger.Log(ELogging.LogLevel.DEBUG, $"Invoked data {e.RequestId}={e.Data}");
       if (this.latRequestId != INT_EMPTY && this.latRequestId == e.RequestId)
         ProcessLatDataReceived(e);
+      else if (this.comFrequencies.Any(q => q.RequestId == e.RequestId))
+        ProcessFreqDataReceived(e);
       else
         ProcessComDataReceived(e);
+    }
+
+    private void ProcessFreqDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
+    {
+      SimVar<double> cf = this.comFrequencies.First(q => q.RequestId == e.RequestId);
+      cf.Value = (double)e.Data;
+      if (this.FrequencyChangedCallback is not null)
+      {
+        int index = Array.IndexOf(this.comFrequencies, cf);
+        if (this.comTransmit[index])
+          this.FrequencyChangedCallback(cf.Value);
+      }
     }
 
     private void ProcessComDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
@@ -301,6 +335,14 @@ namespace eng.com2vPilotVolume.Types
         this.eSimCon.RequestPrimitiveRepeatedly(typeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
         this.comTransmitRequestIds[i] = requestId;
         this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} TRANSMIT registered via {name} as request {requestId}");
+
+        int tmp;
+        var cf = comFrequencies[i];
+        this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} FREQ registering via {cf.Name}");
+        cf.TypeId = this.eSimCon.RegisterPrimitive<double>(cf.Name);
+        this.eSimCon.RequestPrimitiveRepeatedly(cf.TypeId, out tmp, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SECOND, true);
+        cf.RequestId = tmp;
+        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} FREQU registered via {cf.RegInfo}");
       }
     }
 
