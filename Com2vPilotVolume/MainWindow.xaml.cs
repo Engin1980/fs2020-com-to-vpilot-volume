@@ -64,9 +64,12 @@ namespace Com2vPilotVolume
 
     #region Private Fields
 
+    private readonly Sounds sounds;
     private readonly AppSimCon appSimCon;
     private readonly AppVPilot appVPilot;
     private readonly Logger logger;
+    private double lastActiveComFrequency = 0;
+    private int lastActiveComIndex = 1;
 
     #endregion Private Fields
 
@@ -85,7 +88,10 @@ namespace Com2vPilotVolume
       var cfg = App.Configuration;
       this.appVPilot = new(cfg.GetSection("AppVPilot").Get<AppVPilot.Settings>() ?? throw new ApplicationException("Invalid config file - VPilot config missing."));
       this.appSimCon = new(cfg.GetSection("AppSimCon").Get<AppSimCon.Settings>() ?? throw new ApplicationException("Invalid config file - AppSimCon config missing."));
-      this.appSimCon.VolumeUpdateCallback += v => this.appVPilot.SetVolume(v);
+      this.sounds = new(cfg.GetSection("Sounds").Get<Sounds.Settings>() ?? throw new ApplicationException("Invalid config file - Sounds config missing."));
+      this.appSimCon.VolumeUpdateCallback += appSimCon_VolumeUpdateCallback;
+      this.appSimCon.ActiveComChangedCallback += appSimCon_ActiveComChangedCallback;
+      this.appSimCon.FrequencyChangedCallback += appSimCon_FrequencyChangedCallback;
 
 
       var sett = cfg.GetSection("MainWindow").Get<MainWindow.Settings>() ?? throw new ApplicationException("Invalid config file - MainWindow config missing.");
@@ -100,6 +106,34 @@ namespace Com2vPilotVolume
       this.logger = Logger.Create(this, "MainWindow", false);
 
       InitLog();
+    }
+
+    private void appSimCon_FrequencyChangedCallback(double newFrequency)
+    {
+      if (newFrequency != this.lastActiveComFrequency)
+      {
+        this.lastActiveComFrequency = newFrequency;
+        this.sounds.PlayFrequencyChanged();
+      }
+    }
+
+    private void appSimCon_ActiveComChangedCallback(int comIndex)
+    {
+      if (this.lastActiveComIndex != comIndex)
+      {
+        this.lastActiveComFrequency = 0;
+        this.lastActiveComIndex = comIndex;
+        this.sounds.PlayComChanged();
+      }
+    }
+
+    private void appSimCon_VolumeUpdateCallback(Volume volume)
+    {
+      this.appVPilot.SetVolume(volume);
+      if (volume == 1)
+        this.sounds.PlayVolumeMax();
+      else if (volume == 0)
+        this.sounds.PlayVolumeMin();
     }
 
     #endregion Public Constructors
@@ -167,7 +201,7 @@ namespace Com2vPilotVolume
       Button btn = (Button)sender;
       double v = double.Parse((string)btn.Tag) / 100;
 
-      this.appVPilot.SetVolume(v);
+      this.appSimCon_VolumeUpdateCallback(v);
     }
   }
 }
