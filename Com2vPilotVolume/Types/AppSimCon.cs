@@ -17,7 +17,7 @@ namespace eng.com2vPilotVolume.Types
   public class AppSimCon
   {
     public record Settings(int NumberOfComs, int ConnectionTimerInterval, string InitializedCheckVar,
-      string ComVolumeVar, string ComTransmitVar, string ComFrequencyVar,
+      string ComVolumeVar, string ComTransmitVar,
       int[] InitComTransmit, double[] InitComVolume, double[] InitComFrequency);
 
     public enum EConnectionStatus
@@ -29,16 +29,16 @@ namespace eng.com2vPilotVolume.Types
 
     private class SimVar<T>
     {
-      public int TypeId { get; set; } = INT_EMPTY;
-      public int RequestId { get; set; } = INT_EMPTY;
-      public string Name { get; set; }
-      public T? Value { get; set; }
-      public string RegInfo => $"{Name} (tp:{TypeId}, req:{RequestId})";
-
       public SimVar(string name)
       {
         this.Name = name;
       }
+
+      public string Name { get; set; }
+      public string RegInfo => $"{Name} (tp:{TypeId}, req:{RequestId})";
+      public int RequestId { get; set; } = INT_EMPTY;
+      public int TypeId { get; set; } = INT_EMPTY;
+      public T? Value { get; set; }
     }
 
     #region Public Classes
@@ -48,32 +48,24 @@ namespace eng.com2vPilotVolume.Types
 
       #region Public Properties
 
+      public double ActiveComFrequency
+      {
+        get => base.GetProperty<double>(nameof(ActiveComFrequency))!;
+        set => base.UpdateProperty(nameof(ActiveComFrequency), value);
+      }
+
       public int ActiveComIndex
       {
         get => base.GetProperty<int>(nameof(ActiveComIndex))!;
         set => base.UpdateProperty(nameof(ActiveComIndex), value);
       }
 
-      public bool IsConnected
-      {
-        get => base.GetProperty<bool>(nameof(IsConnected))!;
-        private set => base.UpdateProperty(nameof(IsConnected), value);
-      }
       public Volume ActiveComVolume
       {
         get => base.GetProperty<Volume>(nameof(ActiveComVolume))!;
         set => base.UpdateProperty(nameof(ActiveComVolume), value);
       }
-      public double ActiveComFrequency
-      {
-        get => base.GetProperty<double>(nameof(ActiveComFrequency))!;
-        set => base.UpdateProperty(nameof(ActiveComFrequency), value);
-      }
-      public string ConnectionStatusText
-      {
-        get => base.GetProperty<string>(nameof(ConnectionStatusText))!;
-        private set => base.UpdateProperty(nameof(ConnectionStatusText), value);
-      }
+
       public EConnectionStatus ConnectionStatus
       {
         get => base.GetProperty<EConnectionStatus>(nameof(ConnectionStatus))!;
@@ -89,6 +81,17 @@ namespace eng.com2vPilotVolume.Types
         }
       }
 
+      public string ConnectionStatusText
+      {
+        get => base.GetProperty<string>(nameof(ConnectionStatusText))!;
+        private set => base.UpdateProperty(nameof(ConnectionStatusText), value);
+      }
+
+      public bool IsConnected
+      {
+        get => base.GetProperty<bool>(nameof(IsConnected))!;
+        private set => base.UpdateProperty(nameof(IsConnected), value);
+      }
       #endregion Public Properties
 
       #region Public Constructors
@@ -108,26 +111,27 @@ namespace eng.com2vPilotVolume.Types
 
     #region Private Fields
 
+    private const string COM_FREQUENCY_VAR = "COM ACTIVE FREQUENCY:{i}";
     private const int INT_EMPTY = -1;
-    private readonly System.Timers.Timer connectionTimer;
-    private readonly ESimConnect.ESimConnect eSimCon;
-    private readonly ELogging.Logger logger;
-    private int latTypeId = INT_EMPTY;
-    private int latRequestId = INT_EMPTY;
-    private readonly Settings settings;
+    private const double MAX_COM_FREQUENCY = 136.975;
+    private const double MIN_COM_FREQUENCY = 118.000;
     private readonly SimVar<double>[] comFrequencies;
     private readonly SimVar<bool>[] comTransmits;
     private readonly SimVar<Volume>[] comVolumes;
-
+    private readonly System.Timers.Timer connectionTimer;
+    private readonly ESimConnect.ESimConnect eSimCon;
+    private readonly ELogging.Logger logger;
+    private readonly Settings settings;
+    private int latRequestId = INT_EMPTY;
+    private int latTypeId = INT_EMPTY;
     #endregion Private Fields
 
     #region Public Properties
 
-    public StateViewModel State { get; } = new();
-    public Action<Volume>? VolumeUpdateCallback { get; set; }
     public Action<int>? ActiveComChangedCallback { get; set; }
     public Action<double>? FrequencyChangedCallback { get; set; }
-
+    public StateViewModel State { get; } = new();
+    public Action<Volume>? VolumeUpdateCallback { get; set; }
     #endregion Public Properties
 
     #region Public Constructors
@@ -147,7 +151,7 @@ namespace eng.com2vPilotVolume.Types
       {
         this.comVolumes[i] = new SimVar<Volume>(settings.ComVolumeVar.Replace("{i}", (i + 1).ToString()));
         this.comTransmits[i] = new SimVar<bool>(settings.ComTransmitVar.Replace("{i}", (i + 1).ToString()));
-        this.comFrequencies[i] = new SimVar<double>(settings.ComFrequencyVar.Replace("{i}", (i + 1).ToString()));
+        this.comFrequencies[i] = new SimVar<double>(COM_FREQUENCY_VAR.Replace("{i}", (i + 1).ToString()));
       }
 
       this.logger = ELogging.Logger.Create(this, nameof(AppSimCon));
@@ -183,6 +187,15 @@ namespace eng.com2vPilotVolume.Types
 
     #region Private Methods
 
+    private static string GetComRadioSetHzNameForComIndex(int index) =>
+      index switch
+      {
+        1 => "COM_RADIO_SET_HZ",
+        2 => "COM2_RADIO_SET_HZ",
+        3 => "COM3_RADIO_SET_HZ",
+        _ => throw new NotImplementedException("Unexpected radio COM index " + index)
+      };
+
     private void ConnectionTimer_Elapsed(object? sender, ElapsedEventArgs e)
     {
       switch (this.State.ConnectionStatus)
@@ -194,39 +207,6 @@ namespace eng.com2vPilotVolume.Types
           this.logger.Log(ELogging.LogLevel.INFO, "Checking simvar status...");
           InitSimConCheckLatitude();
           break;
-      }
-    }
-
-    private void InitSimConCheckLatitude()
-    {
-      EAssert.IsTrue(this.latTypeId != INT_EMPTY);
-      this.eSimCon.RequestPrimitive(this.latTypeId, out this.latRequestId);
-    }
-
-    private void InitSimConConnection()
-    {
-      try
-      {
-        this.eSimCon.Open();
-
-        // on success:
-        try
-        {
-          RegisterLocationTypesToSim();
-          RegisterComTypesToSimCon();
-          this.logger.Log(ELogging.LogLevel.INFO, "Connection enabled.");
-          this.State.ConnectionStatus = EConnectionStatus.ConnectedNoData;
-        }
-        catch (Exception ex)
-        {
-          this.logger.Log(ELogging.LogLevel.ERROR, "Fatal error registering simcon variables: " + ex.Message);
-          throw new ApplicationException("Failed to register simcon definitions.", ex);
-        }
-      }
-      catch
-      {
-        // intentionally blank
-        this.logger.Log(ELogging.LogLevel.INFO, "Connection failed, will retry after a while...");
       }
     }
 
@@ -243,107 +223,6 @@ namespace eng.com2vPilotVolume.Types
         ProcessTransmitDataReceived(e);
       else
         this.logger.Log(ELogging.LogLevel.WARNING, $"Received data with unknown requestId={e.RequestId}.");
-    }
-
-    private void ProcessTransmitDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
-    {
-      var ct = this.comTransmits.First(q => q.RequestId == e.RequestId);
-      int index = Array.IndexOf(this.comTransmits, ct);
-      ct.Value = ((double)e.Data) != 0;
-      this.logger.Log(ELogging.LogLevel.INFO, $"COM{index + 1} transmit changed to {ct.Value}");
-      if (ct.Value)
-      {
-        this.logger.Log(ELogging.LogLevel.INFO, $"Sending new volume {this.comVolumes[index].Value} to vPilot");
-        this.State.ActiveComIndex = index + 1;
-        this.State.ActiveComVolume = this.comVolumes[index].Value;
-        this.State.ActiveComFrequency = this.comFrequencies[index].Value;
-        this.VolumeUpdateCallback?.Invoke(this.comVolumes[index].Value);
-      }
-    }
-
-    private void ProcessVolumeDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
-    {
-      var cv = this.comVolumes.First(q => q.RequestId == e.RequestId);
-      int index = Array.IndexOf(comVolumes, cv);
-
-      double volumeDouble = (double)e.Data;
-      cv.Value = volumeDouble;
-      this.logger.Log(ELogging.LogLevel.INFO, $"COM{index + 1} volume changed to {cv.Value}");
-      if (this.comTransmits[index].Value)
-      {
-        this.logger.Log(ELogging.LogLevel.INFO, $"Sending new volume {cv.Value} to vPilot");
-        this.State.ActiveComVolume = cv.Value;
-        this.VolumeUpdateCallback?.Invoke(cv.Value);
-      }
-    }
-
-    private void ProcessFreqDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
-    {
-      this.logger.Log(ELogging.LogLevel.DEBUG, $"Frequency changed data received as {e.Data}");
-      SimVar<double> cf = this.comFrequencies.First(q => q.RequestId == e.RequestId);
-      cf.Value = (double)e.Data / 1e6;
-      if (this.FrequencyChangedCallback is not null)
-      {
-        int index = Array.IndexOf(this.comFrequencies, cf);
-        if (this.comTransmits[index].Value)
-        {
-          this.State.ActiveComFrequency = cf.Value;
-          this.FrequencyChangedCallback(cf.Value);
-        }
-
-      }
-    }
-
-    private void ProcessLatDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
-    {
-      this.logger.Log(ELogging.LogLevel.DEBUG, $"Init-check-var value obtained as {e.Data}");
-      if (e.Data is double val && val != 0)
-      {
-        this.logger.Log(ELogging.LogLevel.INFO, $"Init-check-var value valid, confirming connection.");
-        this.State.ConnectionStatus = EConnectionStatus.ConnectedWithData;
-        this.connectionTimer.Enabled = false;
-
-        InitializeComTypesToSimCon();
-      }
-    }
-
-    private void RegisterLocationTypesToSim()
-    {
-      EAssert.IsTrue(this.latTypeId == INT_EMPTY);
-
-      this.logger.Log(ELogging.LogLevel.INFO, $"Registering init-check-var, confirming connection.");
-      string name = this.settings.InitializedCheckVar;
-      this.latTypeId = this.eSimCon.RegisterPrimitive<double>(name);
-    }
-
-    private void RegisterComTypesToSimCon()
-    {
-      this.eSimCon.DataReceived += ESimCon_DataReceived;
-
-      int requestId;
-      for (int i = 0; i < this.settings.NumberOfComs; i++)
-      {
-        var cv = this.comVolumes[i];
-        this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} VOLUME registering via {cv.Name}.");
-        this.comVolumes[i].TypeId = this.eSimCon.RegisterPrimitive<double>(cv.Name);
-        this.eSimCon.RequestPrimitiveRepeatedly(cv.TypeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
-        cv.RequestId = requestId;
-        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} VOLUME registered via {cv.RegInfo}");
-
-        var ct = this.comTransmits[i];
-        this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} TRANSMIT registering via {ct.Name}.");
-        ct.TypeId = this.eSimCon.RegisterPrimitive<double>(ct.Name);
-        this.eSimCon.RequestPrimitiveRepeatedly(ct.TypeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
-        ct.RequestId = requestId;
-        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} TRANSMIT registered via {ct.RegInfo}.");
-
-        var cf = comFrequencies[i];
-        this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} FREQ registering via {cf.Name}");
-        cf.TypeId = this.eSimCon.RegisterPrimitive<double>(cf.Name);
-        this.eSimCon.RequestPrimitiveRepeatedly(cf.TypeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SECOND, true);
-        cf.RequestId = requestId;
-        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} FREQ registered via {cf.RegInfo}");
-      }
     }
 
     private void InitializeComTypesToSimCon()
@@ -405,20 +284,149 @@ namespace eng.com2vPilotVolume.Types
               continue;
             }
             this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} frequency to {val}");
-            string name = (i == 0) ? "COM RADIO SET" : $"COM{i + 1} RADIO SET";
+            string name = GetComRadioSetHzNameForComIndex(i);
             uint value = (uint)(val * 1000000);
             this.eSimCon.SendClientEvent(name, new uint[] { value });
           }
       }
     }
-    private const double MIN_COM_FREQUENCY = 118.000;
-    private const double MAX_COM_FREQUENCY = 136.975;
+
+    private void InitSimConConnection()
+    {
+      try
+      {
+        this.eSimCon.Open();
+
+        // on success:
+        try
+        {
+          RegisterLocationTypesToSim();
+          RegisterComTypesToSimCon();
+          this.logger.Log(ELogging.LogLevel.INFO, "Connection enabled.");
+          this.State.ConnectionStatus = EConnectionStatus.ConnectedNoData;
+        }
+        catch (Exception ex)
+        {
+          this.logger.Log(ELogging.LogLevel.ERROR, "Fatal error registering simcon variables: " + ex.Message);
+          throw new ApplicationException("Failed to register simcon definitions.", ex);
+        }
+      }
+      catch
+      {
+        // intentionally blank
+        this.logger.Log(ELogging.LogLevel.INFO, "Connection failed, will retry after a while...");
+      }
+    }
+
+    private void InitSimConCheckLatitude()
+    {
+      EAssert.IsTrue(this.latTypeId != INT_EMPTY);
+      this.eSimCon.RequestPrimitive(this.latTypeId, out this.latRequestId);
+    }
+    private void ProcessFreqDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
+    {
+      this.logger.Log(ELogging.LogLevel.DEBUG, $"Frequency changed data received as {e.Data}");
+      SimVar<double> cf = this.comFrequencies.First(q => q.RequestId == e.RequestId);
+      cf.Value = (double)e.Data / 1e6;
+      if (this.FrequencyChangedCallback is not null)
+      {
+        int index = Array.IndexOf(this.comFrequencies, cf);
+        if (this.comTransmits[index].Value)
+        {
+          this.State.ActiveComFrequency = cf.Value;
+          this.FrequencyChangedCallback(cf.Value);
+        }
+
+      }
+    }
+
+    private void ProcessLatDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
+    {
+      this.logger.Log(ELogging.LogLevel.DEBUG, $"Init-check-var value obtained as {e.Data}");
+      if (e.Data is double val && val != 0)
+      {
+        this.logger.Log(ELogging.LogLevel.INFO, $"Init-check-var value valid, confirming connection.");
+        this.State.ConnectionStatus = EConnectionStatus.ConnectedWithData;
+        this.connectionTimer.Enabled = false;
+
+        InitializeComTypesToSimCon();
+      }
+    }
+
+    private void ProcessTransmitDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
+    {
+      var ct = this.comTransmits.First(q => q.RequestId == e.RequestId);
+      int index = Array.IndexOf(this.comTransmits, ct);
+      ct.Value = ((double)e.Data) != 0;
+      this.logger.Log(ELogging.LogLevel.INFO, $"COM{index + 1} transmit changed to {ct.Value}");
+      if (ct.Value)
+      {
+        this.logger.Log(ELogging.LogLevel.INFO, $"Sending new volume {this.comVolumes[index].Value} to vPilot");
+        this.State.ActiveComIndex = index + 1;
+        this.State.ActiveComVolume = this.comVolumes[index].Value;
+        this.State.ActiveComFrequency = this.comFrequencies[index].Value;
+        this.VolumeUpdateCallback?.Invoke(this.comVolumes[index].Value);
+      }
+    }
+
+    private void ProcessVolumeDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
+    {
+      var cv = this.comVolumes.First(q => q.RequestId == e.RequestId);
+      int index = Array.IndexOf(comVolumes, cv);
+
+      double volumeDouble = (double)e.Data;
+      cv.Value = volumeDouble;
+      this.logger.Log(ELogging.LogLevel.INFO, $"COM{index + 1} volume changed to {cv.Value}");
+      if (this.comTransmits[index].Value)
+      {
+        this.logger.Log(ELogging.LogLevel.INFO, $"Sending new volume {cv.Value} to vPilot");
+        this.State.ActiveComVolume = cv.Value;
+        this.VolumeUpdateCallback?.Invoke(cv.Value);
+      }
+    }
+    private void RegisterComTypesToSimCon()
+    {
+      this.eSimCon.DataReceived += ESimCon_DataReceived;
+
+      int requestId;
+      for (int i = 0; i < this.settings.NumberOfComs; i++)
+      {
+        var cv = this.comVolumes[i];
+        this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} VOLUME registering via {cv.Name}.");
+        this.comVolumes[i].TypeId = this.eSimCon.RegisterPrimitive<double>(cv.Name);
+        this.eSimCon.RequestPrimitiveRepeatedly(cv.TypeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
+        cv.RequestId = requestId;
+        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} VOLUME registered via {cv.RegInfo}");
+
+        var ct = this.comTransmits[i];
+        this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} TRANSMIT registering via {ct.Name}.");
+        ct.TypeId = this.eSimCon.RegisterPrimitive<double>(ct.Name);
+        this.eSimCon.RequestPrimitiveRepeatedly(ct.TypeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
+        ct.RequestId = requestId;
+        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} TRANSMIT registered via {ct.RegInfo}.");
+
+        var cf = comFrequencies[i];
+        this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} FREQ registering via {cf.Name}");
+        cf.TypeId = this.eSimCon.RegisterPrimitive<double>(cf.Name);
+        this.eSimCon.RequestPrimitiveRepeatedly(cf.TypeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SECOND, true);
+        cf.RequestId = requestId;
+        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} FREQ registered via {cf.RegInfo}");
+      }
+    }
+
+    private void RegisterLocationTypesToSim()
+    {
+      EAssert.IsTrue(this.latTypeId == INT_EMPTY);
+
+      this.logger.Log(ELogging.LogLevel.INFO, $"Registering init-check-var, confirming connection.");
+      string name = this.settings.InitializedCheckVar;
+      this.latTypeId = this.eSimCon.RegisterPrimitive<double>(name);
+    }
     private void StartIfNotConnected()
     {
       if (connectionTimer.Enabled) return;
       connectionTimer.Enabled = true;
     }
-
     #endregion Private Methods
   }
 }
