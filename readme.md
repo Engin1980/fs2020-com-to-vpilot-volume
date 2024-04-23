@@ -89,9 +89,7 @@ The number of handled radios can be set via `AppSimCon.NumberOfComs`.
 ### Adjusting FS2020 connection and read-out
 
 The app connects to FS2020 via the SimConnect library and reads out values for COM volume and
-transmit flag. By default, to read out COM volume, simvars `COM VOLUME:{i}` are
-used; to read out transmit flag, simvars `COM TRANSMIT:{i}` are used (`{i}` replaces
-values 1/2/3 w.r.t. the requested radio).
+transmit flag. If not changed, default SimVars to read out COM volume and transmit flag are used (see below).
 
 Those simvars are predefined and used by all default FS2020 airplanes and most of the
 add-ons. However, in some cases, you might need to adjust those simvars, e.g.:
@@ -101,10 +99,14 @@ add-ons. However, in some cases, you might need to adjust those simvars, e.g.:
 * Some planes/addons use different simvars to control the volume/transmit COM and you
   would like to monitor them instead.
 
-**SimVars Change**
+**Monitored SimVars**
 
-In config, you can change the monitored FS2020 vars from the default ones to different
-ones via keys `AppSimCon.ComVolumeVar` for volume or `AppSimCon.ComTransmitVar`
+As mentioned, the app is monitoring several FS2020 SimVars to provide its functionality:
+* COM radio volume 1-3 - to read out the current volume of the COM radio in the simulation. By default, this property is represented by `COM VOLUME:{i}`.
+* Active COM transmiting radio 1-3 - to read out the currently selected COM radio used for transmission. By default, this property is represented by `COM TRANSMIT:{i}`.
+* COM radio active frequency 1-3 - to read out the current active frequency for each COM radio. This property is represented by `COM ACTIVE FREQUENCY:{i}` (cannot be changed). 
+
+In the config file, you can change the monitored FS2020 vars from the default ones to different ones via keys `AppSimCon.ComVolumeVar` for volume or `AppSimCon.ComTransmitVar`
 for transmit. For example, you can adjust the values to use so-called L-vars like:
 ```
 {
@@ -128,6 +130,9 @@ In the transmit variable, expected values are decimal values 0 (not active) or 1
 Once done, you can map your controller to work with those values (e.g. via MobiFlight)
 to control transmit and volume values.
 
+Additionally:
+* By default, plane latitude location is used for validation if FS2020 has loaded already and is ready to initialize SimVars. This value is checked for non-empty and non-zero value. Once detected, the SimVar initialization is executed (see below). The default "plane latitude" SimVar can be changed to a different one with the same behavior using `InitializedCheckVar` key in config file.
+
 **SimVars Init**
 
 This part was created to initialize custom L-vars (defined in the previous step) on
@@ -137,15 +142,15 @@ FS2020 simvars are used.
 Why - if you define custom L-vars in the previous step and those variables are not
 defined/used by any addon, you have to set their initial values.
 
-To set the variable values when started, use `InitComTransmit` and `InitComVolume`
-keys in config:
+To set the variable values when started, use `InitComTransmit`, `InitComVolume` and `InitComFrequency` keys in config:
 
 ```
 {
   "AppSimCon": {
     ...
     "InitComTransmit": [ 1, 0, -1 ],
-    "InitComVolume": [ 0.9, -1, -1 ]
+    "InitComVolume": [ 0.9, -1, -1 ],
+    "InitComFrequency: [122.8, -1, -1],
     ...
 ...  
 ```
@@ -156,9 +161,11 @@ Rules:
 * For volume, float values 0..1 define the initial state. E.g., `0.5` initializes volume
   to 50&nbsp;%.
 * For transmit, integer values 0/1 define the initial state: 0 - not active, 1 - active.
+* For frequency, decimal values between 118.000 and 136.975 are accepted.
 
-The example above initializes sets COM1 transmit to the active state, COM2 transmit to the inactive state, and skips COM3 transmit initialization. Also sets COM1 volume to 90&nbsp;%, and skips
-the other COM2/3 volume initializations.
+The example above initializes sets COM1 transmit to the active state, COM2 transmit to the inactive state, and skips COM3 transmit initialization. Also sets COM1 volume to 90&nbsp;% and frequency to 122.800 (VATSIM Unicom) and skips the other COM2/3 initializations.
+
+**Note:** Default SimEvent `COM_RADIO_SET_HZ` (or its equivalents for COM2/3) is used to adjust the COM frequency. This cannot be changed.
 
 ### vPilot volume read-out
 
@@ -182,19 +189,74 @@ set to vPilot Volume Mixer. Example: Multiplicator value `0.25` causes the 100&n
 FS2020 COM volume be transformed to 25% vPilot volume. You can adjust the multiplier
 at your wish, to "disable" the behavior set the multiplier to `1`.
 
+### Sounds
+
+The app is able to play sounds at the specific occasions:
+* when the volume of the active COM radio is maxed,
+* when the active COM radio is muted,
+* when the active COM radio has changed,
+* when the active frequency of the active COM radio has changed.
+
+Every sound can be adjusted in the relevant section of the configuration file:
+
+```
+  "Sounds": {
+    "MaxVolumeFile": ".\\sounds\\high.mp3",
+    "MaxVolumeFileVolume": 0.5,
+    "MinVolumeFile": ".\\sounds\\low.mp3",
+    "MinVolumeFileVolume": 0.5,
+    "FrequencyChangedFile": ".\\sounds\\freqSwitch.mp3",
+    "FrequencyChangedFileVolume": 0.5,
+    "ComChangedFile": ".\\sounds\\comSwitch.mp3",
+    "ComChangedFileVolume": 0.5
+  }
+```
+
+For every file holds:
+* if the file is empty (value is set to the `null`), the sound will be skipped and not used
+* you can adjust the volume of the sound using the `...Volume` key of the respective sound file. The supported values are 0..1.
+
 ### Testing buttons
 
 The app can show buttons to set the volume to vPilot directly. They are for testing
 purposes. To adjust the visibility of those buttons, set `MainWindow.ShowSimpleAdjustButtons`
 to `true` or `false`.
 
+### Logging
+
+For run-time evaluation, logging is introduced into the application. Probably, you should be interested in this section only if you are trying to resolve some issue.
+
+`MainWindowOut` section defines logging written in the Main App Window. You can adjust the level of the logging w.r.t. log rules defined below.
+
+To adjust logging into the file:
+* `Logging:LogFile:Name` defines the file-name, in which the log will be written. If no path specified, the working directory is used. If this value is empty or invalid, default value `_log.txt` will be used.
+* `Logging:LogFile:Reset` defines the the log file is erased at every app startup. If invalid, `true` value is used. Note - `false` value may lead to **huge** log file size!
+* `Logging:LogFile:Level` defines the lowest logged level into the file. If invalid, `debug` value is used.
+
+To define required log levels, you may use following strings: `debug`/`info`/`warning`/`error`/`critical`.
+
 ## FAQ
 
-None yet.
+Q: Application does not start (or quits immediatelly) without any notice.
+
+A: Check the log file. Mostly, the cause is invalid `appsettings.json` log file.
+
+---
+
 
 ## Version history
 
-**2024-04-08**
+**v0.3.2 - 2024-04-23**
+* Improved logging and configuration file.
+* Added support for initial COM frequency tuning
+
+**v0.3.0 - 2024-04-22**
+* Added support for sound notifications
+
+**v0.2.0 - 2024-04-21**
+* Added postponed custom variable initialization when FS2020 is ready
+
+**v0.1.1-beta - 2024-04-08**
 * Initial release
 * Can connect to FS2020
 * Can use custom variables

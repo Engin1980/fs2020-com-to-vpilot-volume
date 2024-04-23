@@ -17,6 +17,8 @@ using Microsoft.Extensions.Configuration;
 using ELogging;
 using ESystem.Miscelaneous;
 using System.Reflection;
+using System.Linq.Expressions;
+using System.CodeDom;
 
 namespace Com2vPilotVolume
 {
@@ -85,16 +87,33 @@ namespace Com2vPilotVolume
     {
       InitializeComponent();
 
-      var cfg = App.Configuration;
-      this.appVPilot = new(cfg.GetSection("AppVPilot").Get<AppVPilot.Settings>() ?? throw new ApplicationException("Invalid config file - VPilot config missing."));
-      this.appSimCon = new(cfg.GetSection("AppSimCon").Get<AppSimCon.Settings>() ?? throw new ApplicationException("Invalid config file - AppSimCon config missing."));
-      this.sounds = new(cfg.GetSection("Sounds").Get<Sounds.Settings>() ?? throw new ApplicationException("Invalid config file - Sounds config missing."));
+      // log init
+      this.logger = Logger.Create(this, "MainWindow", false);
+      InitLog();
+
+      // app init
+      MainWindow.Settings sett;
+      try
+      {
+        var cfg = App.Configuration;
+        this.appVPilot = new(cfg.GetSection("AppVPilot").Get<AppVPilot.Settings>() ?? throw new ConfigLoadFailedException("AppVPilot"));
+        this.appSimCon = new(cfg.GetSection("AppSimCon").Get<AppSimCon.Settings>() ?? throw new ConfigLoadFailedException("AppSimCon"));
+        this.sounds = new(cfg.GetSection("Sounds").Get<Sounds.Settings>() ?? throw new ConfigLoadFailedException("Sounds"));
+        sett = cfg.GetSection("MainWindow").Get<MainWindow.Settings>() ?? throw new ConfigLoadFailedException("MainWindow");
+      }
+      catch (Exception ex)
+      {
+        this.logger.Log(LogLevel.ERROR, "Failed to initialize from config file.");
+        this.logger.Log(LogLevel.ERROR, ex.ToString());
+        this.logger.Log(LogLevel.ERROR, "Application will now quit.");
+        Application.Current.Shutdown();
+        return;
+      }
+
       this.appSimCon.VolumeUpdateCallback += appSimCon_VolumeUpdateCallback;
       this.appSimCon.ActiveComChangedCallback += appSimCon_ActiveComChangedCallback;
       this.appSimCon.FrequencyChangedCallback += appSimCon_FrequencyChangedCallback;
 
-
-      var sett = cfg.GetSection("MainWindow").Get<MainWindow.Settings>() ?? throw new ApplicationException("Invalid config file - MainWindow config missing.");
       this.Width = sett.StartupWindowSize[0];
       this.Height = sett.StartupWindowSize[1];
 
@@ -103,9 +122,6 @@ namespace Com2vPilotVolume
         ShowSimpleAdjustButtons = sett.ShowSimpleAdjustButtons
       };
       this.DataContext = this.Model;
-      this.logger = Logger.Create(this, "MainWindow", false);
-
-      InitLog();
     }
 
     private void appSimCon_FrequencyChangedCallback(double newFrequency)
@@ -155,12 +171,55 @@ namespace Com2vPilotVolume
 
     private void InitLog()
     {
-      var configRules = App.Configuration.GetSection("Logging:MainWindowOut:Rules");
-      List<ConfigLogRule> configLogRules = configRules.Get<List<ConfigLogRule>>() ?? throw new ApplicationException("Failed to load config - logging.");
-      List<LogRule> rules = configLogRules.Select(q => new LogRule(q.Pattern, q.Level)).ToList();
-      Logger.RegisterLogAction(li => ExtendLog(li), rules);
+      // file log
+      string logFileName = App.Configuration.GetSection("Logging:LogFile").GetValue<string?>("Name") ?? "_log.txt";
+      bool resetLogFile = App.Configuration.GetSection("Logging:LogFile").GetValue<bool?>("Reset") ?? true;
+      string levelString = App.Configuration.GetSection("Logging:LogFile").GetValue<string?>("Level") ?? "debug";
+      LogLevel level;
+      try
+      {
+        level = Enum.Parse<LogLevel>(levelString);
+      }
+      catch (Exception ex)
+      {
+        level = LogLevel.DEBUG;
+      }
+      if (resetLogFile && System.IO.File.Exists(logFileName))
+        System.IO.File.Delete(logFileName);
+      List<LogRule> logEverythingRules = new()
+      {
+        new LogRule(".+", level)
+      };
+      Logger.RegisterLogAction(li => LogToFile(li, logFileName), logEverythingRules);
+
+      // Main Window log
+      try
+      {
+        string key = "Logging:MainWindowOut:Rules";
+        var configRules = App.Configuration.GetSection(key);
+        List<ConfigLogRule> configLogRules = configRules.Get<List<ConfigLogRule>>() ?? throw new ConfigLoadFailedException(key);
+        List<LogRule> rules = configLogRules.Select(q => new LogRule(q.Pattern, q.Level)).ToList();
+        Logger.RegisterLogAction(li => ExtendLog(li), rules);
+      }
+      catch (Exception ex)
+      {
+        this.logger.Log(LogLevel.ERROR, "Failed to initialize local app log.");
+        this.logger.Log(LogLevel.ERROR, ex.ToString());
+        this.logger.Log(LogLevel.ERROR, "Application will now quit.");
+        Application.Current.Shutdown();
+        return;
+      }
 
       this.logger.Log(LogLevel.INFO, "Log initialized");
+    }
+
+    private void LogToFile(LogItem li, string fileName)
+    {
+      string s = $"\n{DateTime.Now,-20}  {li.SenderName,-20}  {li.Level,-12}  {li.Message}";
+      lock (this)
+      {
+        System.IO.File.AppendAllText(fileName, s);
+      }
     }
 
     private void Window_Closed(object sender, EventArgs e)
