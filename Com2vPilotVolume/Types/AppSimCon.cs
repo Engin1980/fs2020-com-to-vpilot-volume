@@ -284,7 +284,7 @@ namespace eng.com2vPilotVolume.Types
               continue;
             }
             this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} frequency to {val}");
-            string name = GetComRadioSetHzNameForComIndex(i);
+            string name = GetComRadioSetHzNameForComIndex(i + 1);
             uint value = (uint)(val * 1000000);
             this.eSimCon.SendClientEvent(name, new uint[] { value });
           }
