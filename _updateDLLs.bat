@@ -1,13 +1,11 @@
-set "local=%cd%"
+copy ..\ESystem.NET\_Release\ESystem.dll .\DLLs\
+copy ..\ESystem.NET\_Release\ESystem.pdb .\DLLs\
+copy ..\ESystem.NET\_Release\ELogging.dll .\DLLs\
+copy ..\ESystem.NET\_Release\ELogging.pdb .\DLLs\
+copy ..\ESystem.NET\_Release\ESystem.WPF.pdb .\DLLs\
+copy ..\ESystem.NET\_Release\ESystem.WPF.dll .\DLLs\
 
-cd ..\ESystem.NET
-call .\_updateRelease.bat
-
-cd ..\ESimConnect
-call .\_updateRelease.bat
-
-cd %local%
-copy ..\ESystem.NET\_Release\* .\DLLs\
-copy ..\ESimConnect\_Release\* .\DLLs\
+copy ..\ESimConnect\_Release\ESimConnect\ESimConnect.dll .\DLLs\
+copy ..\ESimConnect\_Release\ESimConnect\ESimConnect.pdb .\DLLs\
 
 pause

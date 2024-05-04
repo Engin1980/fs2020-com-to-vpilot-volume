@@ -10,7 +10,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
-using static ESimConnect.SimUnits;
 
 namespace eng.com2vPilotVolume.Types
 {
@@ -36,8 +35,8 @@ namespace eng.com2vPilotVolume.Types
 
       public string Name { get; set; }
       public string RegInfo => $"{Name} (tp:{TypeId}, req:{RequestId})";
-      public int RequestId { get; set; } = INT_EMPTY;
-      public int TypeId { get; set; } = INT_EMPTY;
+      public RequestId RequestId { get; set; } = REQUEST_EMPTY;
+      public TypeId TypeId { get; set; } = TYPE_EMPTY;
       public T? Value { get; set; }
     }
 
@@ -112,7 +111,8 @@ namespace eng.com2vPilotVolume.Types
     #region Private Fields
 
     private const string COM_FREQUENCY_VAR = "COM ACTIVE FREQUENCY:{i}";
-    private const int INT_EMPTY = -1;
+    private static readonly RequestId REQUEST_EMPTY = new RequestId(-1);
+    private static readonly TypeId TYPE_EMPTY = new TypeId(-1);
     private const double MAX_COM_FREQUENCY = 136.975;
     private const double MIN_COM_FREQUENCY = 118.000;
     private readonly SimVar<double>[] comFrequencies;
@@ -122,8 +122,8 @@ namespace eng.com2vPilotVolume.Types
     private readonly ESimConnect.ESimConnect eSimCon;
     private readonly ELogging.Logger logger;
     private readonly Settings settings;
-    private int latRequestId = INT_EMPTY;
-    private int latTypeId = INT_EMPTY;
+    private RequestId latRequestId = REQUEST_EMPTY;
+    private TypeId latTypeId = TYPE_EMPTY;
     #endregion Private Fields
 
     #region Public Properties
@@ -213,7 +213,7 @@ namespace eng.com2vPilotVolume.Types
     private void ESimCon_DataReceived(ESimConnect.ESimConnect sender, ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
       this.logger.Log(ELogging.LogLevel.INFO, $"Received data {e.RequestId}={e.Data}");
-      if (this.latRequestId != INT_EMPTY && this.latRequestId == e.RequestId)
+      if (this.latRequestId != REQUEST_EMPTY && this.latRequestId == e.RequestId)
         ProcessLatDataReceived(e);
       else if (this.comFrequencies.Any(q => q.RequestId == e.RequestId))
         ProcessFreqDataReceived(e);
@@ -246,7 +246,7 @@ namespace eng.com2vPilotVolume.Types
               continue;
             }
             this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} transmit to {val}");
-            this.eSimCon.SendPrimitive<double>(this.comTransmits[i].TypeId, val);
+            this.eSimCon.Values.Send(this.comTransmits[i].TypeId, val);
           }
       }
 
@@ -265,7 +265,7 @@ namespace eng.com2vPilotVolume.Types
               continue;
             }
             this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} volume to {val}");
-            this.eSimCon.SendPrimitive<double>(this.comVolumes[i].TypeId, val);
+            this.eSimCon.Values.Send(this.comVolumes[i].TypeId, val);
           }
       }
 
@@ -286,7 +286,7 @@ namespace eng.com2vPilotVolume.Types
             this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} frequency to {val}");
             string name = GetComRadioSetHzNameForComIndex(i + 1);
             uint value = (uint)(val * 1000000);
-            this.eSimCon.SendClientEvent(name, new uint[] { value });
+            this.eSimCon.ClientEvents.Invoke(name, value);
           }
       }
     }
@@ -320,8 +320,8 @@ namespace eng.com2vPilotVolume.Types
 
     private void InitSimConCheckLatitude()
     {
-      EAssert.IsTrue(this.latTypeId != INT_EMPTY);
-      this.eSimCon.RequestPrimitive(this.latTypeId, out this.latRequestId);
+      EAssert.IsTrue(this.latTypeId != TYPE_EMPTY);
+      this.latRequestId = this.eSimCon.Values.Request(this.latTypeId);
     }
     private void ProcessFreqDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
@@ -388,27 +388,27 @@ namespace eng.com2vPilotVolume.Types
     {
       this.eSimCon.DataReceived += ESimCon_DataReceived;
 
-      int requestId;
+      RequestId requestId;
       for (int i = 0; i < this.settings.NumberOfComs; i++)
       {
         var cv = this.comVolumes[i];
         this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} VOLUME registering via {cv.Name}.");
-        this.comVolumes[i].TypeId = this.eSimCon.RegisterPrimitive<double>(cv.Name);
-        this.eSimCon.RequestPrimitiveRepeatedly(cv.TypeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
+        this.comVolumes[i].TypeId = this.eSimCon.Values.Register<double>(cv.Name);
+        requestId = this.eSimCon.Values.RequestRepeatedly(cv.TypeId, SimConnectPeriod.SIM_FRAME, true);
         cv.RequestId = requestId;
         this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} VOLUME registered via {cv.RegInfo}");
 
         var ct = this.comTransmits[i];
         this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} TRANSMIT registering via {ct.Name}.");
-        ct.TypeId = this.eSimCon.RegisterPrimitive<double>(ct.Name);
-        this.eSimCon.RequestPrimitiveRepeatedly(ct.TypeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SIM_FRAME, true);
+        ct.TypeId = this.eSimCon.Values.Register<double>(ct.Name);
+        requestId = this.eSimCon.Values.RequestRepeatedly(ct.TypeId, SimConnectPeriod.SIM_FRAME, true);
         ct.RequestId = requestId;
         this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} TRANSMIT registered via {ct.RegInfo}.");
 
         var cf = comFrequencies[i];
         this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} FREQ registering via {cf.Name}");
-        cf.TypeId = this.eSimCon.RegisterPrimitive<double>(cf.Name);
-        this.eSimCon.RequestPrimitiveRepeatedly(cf.TypeId, out requestId, Microsoft.FlightSimulator.SimConnect.SIMCONNECT_PERIOD.SECOND, true);
+        cf.TypeId = this.eSimCon.Values.Register<double>(cf.Name);
+        requestId = this.eSimCon.Values.RequestRepeatedly(cf.TypeId, SimConnectPeriod.SECOND, true);
         cf.RequestId = requestId;
         this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} FREQ registered via {cf.RegInfo}");
       }
@@ -416,11 +416,11 @@ namespace eng.com2vPilotVolume.Types
 
     private void RegisterLocationTypesToSim()
     {
-      EAssert.IsTrue(this.latTypeId == INT_EMPTY);
+      EAssert.IsTrue(this.latTypeId == TYPE_EMPTY);
 
       this.logger.Log(ELogging.LogLevel.INFO, $"Registering init-check-var, confirming connection.");
       string name = this.settings.InitializedCheckVar;
-      this.latTypeId = this.eSimCon.RegisterPrimitive<double>(name);
+      this.latTypeId = this.eSimCon.Values.Register<double>(name);
     }
     private void StartIfNotConnected()
     {
