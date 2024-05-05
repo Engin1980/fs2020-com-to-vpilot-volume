@@ -323,6 +323,7 @@ namespace eng.com2vPilotVolume.Types
       EAssert.IsTrue(this.latTypeId != TYPE_EMPTY);
       this.latRequestId = this.eSimCon.Values.Request(this.latTypeId);
     }
+
     private void ProcessFreqDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
       this.logger.Log(ELogging.LogLevel.DEBUG, $"Frequency changed data received as {e.Data}");

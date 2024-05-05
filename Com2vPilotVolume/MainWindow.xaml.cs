@@ -66,10 +66,10 @@ namespace Com2vPilotVolume
 
     #region Private Fields
 
-    private readonly Sounds sounds;
-    private readonly AppSimCon appSimCon;
-    private readonly AppVPilot appVPilot;
-    private readonly Logger logger;
+    private readonly Sounds sounds = null!;
+    private readonly AppSimCon appSimCon = null!;
+    private readonly AppVPilot appVPilot = null!;
+    private readonly Logger logger = null!;
     private double lastActiveComFrequency = 0;
     private int lastActiveComIndex = 1;
 
@@ -77,7 +77,7 @@ namespace Com2vPilotVolume
 
     #region Public Properties
 
-    public ViewModel Model { get; private set; }
+    public ViewModel Model { get; private set; } = null!;
 
     #endregion Public Properties
 
@@ -180,7 +180,7 @@ namespace Com2vPilotVolume
       {
         level = Enum.Parse<LogLevel>(levelString);
       }
-      catch (Exception ex)
+      catch (Exception)
       {
         level = LogLevel.DEBUG;
       }
