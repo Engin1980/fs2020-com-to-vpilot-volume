@@ -19,7 +19,6 @@ using ESystem.Miscelaneous;
 using System.Reflection;
 using System.Linq.Expressions;
 using System.CodeDom;
-using System.Timers;
 
 namespace Com2vPilotVolume
 {
@@ -28,27 +27,23 @@ namespace Com2vPilotVolume
   /// </summary>
   public partial class MainWindow : Window
   {
-
     public record Settings(int[] StartupWindowSize, bool ShowSimpleAdjustButtons);
 
-    private record ConfigLogRule(string Pattern, string Level);
-
-
-    #region Public Classes + Structs + Interfaces
+    #region Public Classes
 
     public class ViewModel : NotifyPropertyChanged
     {
-
       #region Public Properties
+
+      public AppSimCon.StateViewModel SimConState { get; private set; }
+      public AppVPilot.StateViewModel VPilotState { get; private set; }
+
 
       public bool ShowSimpleAdjustButtons
       {
         get => base.GetProperty<bool>(nameof(ShowSimpleAdjustButtons))!;
         set => base.UpdateProperty(nameof(ShowSimpleAdjustButtons), value);
       }
-
-      public AppSimCon.StateViewModel SimConState { get; private set; }
-      public AppVPilot.StateViewModel VPilotState { get; private set; }
 
       #endregion Public Properties
 
@@ -65,18 +60,16 @@ namespace Com2vPilotVolume
       }
 
       #endregion Public Constructors
-
     }
 
-    #endregion Public Classes + Structs + Interfaces
+    #endregion Public Classes
 
     #region Private Fields
 
+    private readonly Sounds sounds = null!;
     private readonly AppSimCon appSimCon = null!;
     private readonly AppVPilot appVPilot = null!;
-    private readonly Logger logger;
-    private readonly Sounds sounds = null!;
-    private readonly System.Timers.Timer? tmrMinVolumeAlert;
+    private readonly Logger logger = null!;
     private double lastActiveComFrequency = 0;
     private int lastActiveComIndex = 1;
 
@@ -92,7 +85,6 @@ namespace Com2vPilotVolume
 
     public MainWindow()
     {
-      int repeatIntervalOfMinVolumeAlert;
       InitializeComponent();
 
       // log init
@@ -107,7 +99,6 @@ namespace Com2vPilotVolume
         this.appVPilot = new(cfg.GetSection("AppVPilot").Get<AppVPilot.Settings>() ?? throw new ConfigLoadFailedException("AppVPilot"));
         this.appSimCon = new(cfg.GetSection("AppSimCon").Get<AppSimCon.Settings>() ?? throw new ConfigLoadFailedException("AppSimCon"));
         this.sounds = new(cfg.GetSection("Sounds").Get<Sounds.Settings>() ?? throw new ConfigLoadFailedException("Sounds"));
-        repeatIntervalOfMinVolumeAlert = cfg.GetValue<int>("RepeatIntervalOfMinVolumeAlert", -1);
         sett = cfg.GetSection("MainWindow").Get<MainWindow.Settings>() ?? throw new ConfigLoadFailedException("MainWindow");
       }
       catch (Exception ex)
@@ -126,35 +117,11 @@ namespace Com2vPilotVolume
       this.Width = sett.StartupWindowSize[0];
       this.Height = sett.StartupWindowSize[1];
 
-      if (repeatIntervalOfMinVolumeAlert > 0)
-      {
-        this.tmrMinVolumeAlert = new()
-        {
-          Interval = repeatIntervalOfMinVolumeAlert * 1000,
-          AutoReset = true,
-          Enabled = false
-        };
-        this.tmrMinVolumeAlert.Elapsed += tmrMinVolumeAlert_Elapsed;
-      }
       this.Model = new ViewModel(this.appSimCon.State, this.appVPilot.State)
       {
         ShowSimpleAdjustButtons = sett.ShowSimpleAdjustButtons
       };
       this.DataContext = this.Model;
-    }
-
-    #endregion Public Constructors
-
-    #region Private Methods
-
-    private void appSimCon_ActiveComChangedCallback(int comIndex)
-    {
-      if (this.lastActiveComIndex != comIndex)
-      {
-        this.lastActiveComFrequency = 0;
-        this.lastActiveComIndex = comIndex;
-        this.sounds.PlayComChanged();
-      }
     }
 
     private void appSimCon_FrequencyChangedCallback(double newFrequency)
@@ -166,29 +133,28 @@ namespace Com2vPilotVolume
       }
     }
 
+    private void appSimCon_ActiveComChangedCallback(int comIndex)
+    {
+      if (this.lastActiveComIndex != comIndex)
+      {
+        this.lastActiveComFrequency = 0;
+        this.lastActiveComIndex = comIndex;
+        this.sounds.PlayComChanged();
+      }
+    }
+
     private void appSimCon_VolumeUpdateCallback(Volume volume)
     {
       this.appVPilot.SetVolume(volume);
-      if (volume == 0)
-      {
+      if (volume == 1)
+        this.sounds.PlayVolumeMax();
+      else if (volume == 0)
         this.sounds.PlayVolumeMin();
-        if (this.tmrMinVolumeAlert != null) this.tmrMinVolumeAlert.Enabled = true;
-      }
-      else
-      {
-        if (this.tmrMinVolumeAlert != null) this.tmrMinVolumeAlert.Enabled = false;
-        if (volume == 1)
-          this.sounds.PlayVolumeMax();
-      }
     }
 
-    private void btnV_Click(object sender, RoutedEventArgs e)
-    {
-      Button btn = (Button)sender;
-      double v = double.Parse((string)btn.Tag) / 100;
+    #endregion Public Constructors
 
-      this.appSimCon_VolumeUpdateCallback(v);
-    }
+    #region Private Methods
 
     private void ExtendLog(LogItem li)
     {
@@ -201,6 +167,8 @@ namespace Com2vPilotVolume
       }
     }
 
+    private record ConfigLogRule(string Pattern, string Level);
+
     private void InitLog()
     {
       // file log
@@ -212,7 +180,7 @@ namespace Com2vPilotVolume
       {
         level = Enum.Parse<LogLevel>(levelString);
       }
-      catch (Exception ex)
+      catch (Exception)
       {
         level = LogLevel.DEBUG;
       }
@@ -254,6 +222,21 @@ namespace Com2vPilotVolume
       }
     }
 
+    private void Window_Closed(object sender, EventArgs e)
+    {
+      Application.Current.Shutdown();
+    }
+
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+      this.logger.Log(LogLevel.INFO, "Window_Loaded invoked");
+
+      this.appSimCon.Start();
+      this.appVPilot.Start();
+
+      PrintAbout();
+    }
+
     private void PrintAbout()
     {
       this.logger.Log(LogLevel.ALWAYS, " ");
@@ -270,27 +253,14 @@ namespace Com2vPilotVolume
       this.logger.Log(LogLevel.ALWAYS, " ");
     }
 
-    private void tmrMinVolumeAlert_Elapsed(object? sender, ElapsedEventArgs e)
-    {
-      this.sounds.PlayVolumeMin();
-    }
-
-    private void Window_Closed(object sender, EventArgs e)
-    {
-      Application.Current.Shutdown();
-    }
-
-    private void Window_Loaded(object sender, RoutedEventArgs e)
-    {
-      this.logger.Log(LogLevel.INFO, "Window_Loaded invoked");
-
-      this.appSimCon.Start();
-      this.appVPilot.Start();
-
-      PrintAbout();
-    }
-
     #endregion Private Methods
 
+    private void btnV_Click(object sender, RoutedEventArgs e)
+    {
+      Button btn = (Button)sender;
+      double v = double.Parse((string)btn.Tag) / 100;
+
+      this.appSimCon_VolumeUpdateCallback(v);
+    }
   }
 }
