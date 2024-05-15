@@ -150,6 +150,7 @@ namespace eng.com2vPilotVolume.Types
         this.connectionTimer.Enabled = false;
         this.logger.Log(LogLevel.INFO, "VPilot found, connected");
         this.readVolumeTimer.Enabled = true;
+        this.SetVolume(new Volume(1));
       }
       else
       {
