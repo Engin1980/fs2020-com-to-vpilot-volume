@@ -1,4 +1,5 @@
 ﻿using ELogging;
+using ESystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -75,16 +76,21 @@ namespace Eng.WinCoreAudioApiLib
       logger.Log(LogLevel.INFO, $"Set Volume for {processId} setting {level}");
 
       level = NormalizeLevel(level);
+      logger.Log(LogLevel.DEBUG, $"Normalized level = {level}");
+
       ISimpleAudioVolume volume = TryGetVolumeObject(processId)
         ?? throw new MixerException($"Failed to get volume for '{processId}'.");
 
       Guid guid = Guid.Empty;
-      int tmp = volume.SetMasterVolume((float)level, ref guid);
+      _ = volume.SetMasterVolume((float)level, ref guid);
     }
 
     private static double NormalizeLevel(double level)
     {
-      return Math.Max(Math.Min(1, level), 0);
+      return level
+        .Select(q => Math.Round(q, 2))
+        .Select(q => Math.Max(q, 0))
+        .Select(q => Math.Min(q, 1));
     }
 
     public void SetMute(int processId, bool isMuted)
