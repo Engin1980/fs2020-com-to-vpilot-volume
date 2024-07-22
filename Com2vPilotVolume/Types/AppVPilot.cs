@@ -1,6 +1,7 @@
 ﻿using ELogging;
 using Eng.WinCoreAudioApiLib;
 using ESystem;
+using ESystem.Asserting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,9 +13,9 @@ namespace eng.com2vPilotVolume.Types
 {
   public class AppVPilot
   {
-    public record Settings(int ConnectionTimerInterval, int ReadVolumeTimerInterval, double VolumeMultiplier);
-
     #region Public Classes
+
+    public record Settings(int ConnectionTimerInterval, int ReadVolumeTimerInterval);
 
     public class StateViewModel : NotifyPropertyChangedBase
     {
@@ -64,7 +65,6 @@ namespace eng.com2vPilotVolume.Types
     private readonly Logger logger;
     private readonly Mixer mixer;
     private readonly System.Timers.Timer readVolumeTimer;
-    private readonly double volumeMultiplier;
 
     #endregion Private Fields
 
@@ -79,8 +79,6 @@ namespace eng.com2vPilotVolume.Types
     public AppVPilot(Settings settings)
     {
       this.logger = Logger.Create(this, nameof(AppVPilot));
-
-      this.volumeMultiplier = settings.VolumeMultiplier;
 
       this.connectionTimer = new System.Timers.Timer()
       {
@@ -109,16 +107,15 @@ namespace eng.com2vPilotVolume.Types
 
     public void SetVolume(Volume volume)
     {
-      Volume multipliedVolume = volume * this.volumeMultiplier;
       if (this.State.VPilotProcess == null)
       {
         this.logger.Log(LogLevel.WARNING, "SetVolume requested, but vPilot not connected. Value will not be set.");
         return;
       }
-      this.logger.Log(LogLevel.INFO, $"SetVolume requested with value {volume} multiplied to {multipliedVolume}.");
+      this.logger.Log(LogLevel.INFO, $"SetVolume requested with value {volume}.");
       try
       {
-        this.mixer.SetVolume(this.State.VPilotProcess!.Id, multipliedVolume);
+        this.mixer.SetVolume(this.State.VPilotProcess!.Id, volume);
       }
       catch (Exception ex)
       {
@@ -140,6 +137,8 @@ namespace eng.com2vPilotVolume.Types
     #endregion Public Methods
 
     #region Private Methods
+
+
 
     private void ConnectionTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {

@@ -20,7 +20,6 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <Grid Grid.Row="0">
@@ -81,23 +80,21 @@
             <Label Content="{Binding VPilotState.VPilotProcess.Id}" Grid.Row="1" Grid.Column="1" />
             <Label Content="Current Volume:" Grid.Row="2" Grid.Column="0" />
             <Label Content="{Binding VPilotState.Volume}" Grid.Row="2" Grid.Column="1" />
-            <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1">
-              <StackPanel Orientation="Horizontal"
-                          Visibility="{Binding ShowSimpleAdjustButtons, Converter={StaticResource BoolToVisibilityConverter}}">
-                <Button x:Name="btnV0" Content="0%" Tag="0" Click="btnV_Click" />
-                <Button x:Name="btnV10" Content="10%" Tag="10" Click="btnV_Click" />
-                <Button x:Name="btnV50" Content="50%" Tag="50" Click="btnV_Click" />
-                <Button x:Name="btnV100" Content="100%" Tag="100" Click="btnV_Click" />
-              </StackPanel>
-            </StackPanel>
-
           </Grid>
         </DockPanel>
       </GroupBox>
     </Grid>
 
-    <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="DarkGray" ShowsPreview="True"  />
-    <DockPanel Grid.Row="2">
+    <GroupBox Header="Direct Volume Adjust:" Grid.Row="1">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" x:Name="btnInputSet" Content="(SET)" Click="btnInputSet_Click" />
+        <TextBox DockPanel.Dock="Right" x:Name="txtInput" Width="55" Padding="0 4 0 0" Text="{Binding CustomVolume, StringFormat={}{0:N2}}" />
+        <Slider Minimum="0" Maximum="100" Margin="4 4 4 0" Value="{Binding CustomVolume}" />
+      </DockPanel>
+    </GroupBox>
+
+
+    <DockPanel Grid.Row="3">
       <TextBox x:Name="txtOut" MinLines="5" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" />
     </DockPanel>
   </Grid>

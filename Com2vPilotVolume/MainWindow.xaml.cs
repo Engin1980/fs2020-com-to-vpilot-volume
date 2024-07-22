@@ -27,7 +27,7 @@ namespace Com2vPilotVolume
   /// </summary>
   public partial class MainWindow : Window
   {
-    public record Settings(int[] StartupWindowSize, bool ShowSimpleAdjustButtons);
+    public record Settings(int[] StartupWindowSize, bool ShowSimpleAdjustButtons, bool ShowDebugButtons);
 
     #region Public Classes
 
@@ -38,6 +38,12 @@ namespace Com2vPilotVolume
       public AppSimCon.StateViewModel SimConState { get; private set; }
       public AppVPilot.StateViewModel VPilotState { get; private set; }
 
+
+      public double CustomVolume
+      {
+        get { return base.GetProperty<double>(nameof(CustomVolume))!; }
+        set { base.UpdateProperty(nameof(CustomVolume), value); }
+      }
 
       public bool ShowSimpleAdjustButtons
       {
@@ -69,6 +75,7 @@ namespace Com2vPilotVolume
     private readonly Sounds sounds = null!;
     private readonly AppSimCon appSimCon = null!;
     private readonly AppVPilot appVPilot = null!;
+    private readonly VolumeMapper volumeMapper = null!;
     private readonly Logger logger = null!;
     private double lastActiveComFrequency = 0;
     private int lastActiveComIndex = 1;
@@ -98,6 +105,7 @@ namespace Com2vPilotVolume
         var cfg = App.Configuration;
         this.appVPilot = new(cfg.GetSection("AppVPilot").Get<AppVPilot.Settings>() ?? throw new ConfigLoadFailedException("AppVPilot"));
         this.appSimCon = new(cfg.GetSection("AppSimCon").Get<AppSimCon.Settings>() ?? throw new ConfigLoadFailedException("AppSimCon"));
+        this.volumeMapper = new(cfg.GetSection("VolumeMapping").Get<VolumeMapper.Settings>() ?? throw new ConfigLoadFailedException("VolumeMapping"));
         this.sounds = new(cfg.GetSection("Sounds").Get<Sounds.Settings>() ?? throw new ConfigLoadFailedException("Sounds"));
         sett = cfg.GetSection("MainWindow").Get<MainWindow.Settings>() ?? throw new ConfigLoadFailedException("MainWindow");
       }
@@ -143,12 +151,14 @@ namespace Com2vPilotVolume
       }
     }
 
-    private void appSimCon_VolumeUpdateCallback(Volume volume)
+    private void appSimCon_VolumeUpdateCallback(Volume simVolume)
     {
-      this.appVPilot.SetVolume(volume);
-      if (volume == 1)
+      Volume winVolume = volumeMapper.Map(simVolume);
+
+      this.appVPilot.SetVolume(winVolume);
+      if (winVolume == 1)
         this.sounds.PlayVolumeMax();
-      else if (volume == 0)
+      else if (winVolume == 0)
         this.sounds.PlayVolumeMin();
     }
 
@@ -237,6 +247,12 @@ namespace Com2vPilotVolume
       PrintAbout();
     }
 
+    private void btnInputSet_Click(object sender, RoutedEventArgs e)
+    {
+      double v = this.Model.CustomVolume / 100d;
+      this.appSimCon_VolumeUpdateCallback(v);
+    }
+
     private void PrintAbout()
     {
       this.logger.Log(LogLevel.ALWAYS, " ");
@@ -254,13 +270,5 @@ namespace Com2vPilotVolume
     }
 
     #endregion Private Methods
-
-    private void btnV_Click(object sender, RoutedEventArgs e)
-    {
-      Button btn = (Button)sender;
-      double v = double.Parse((string)btn.Tag) / 100;
-
-      this.appSimCon_VolumeUpdateCallback(v);
-    }
   }
 }
