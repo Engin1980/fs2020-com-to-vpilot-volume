@@ -40,6 +40,9 @@ For more info about principle, implementation or configuration see [Project Wiki
 
 ## Version history
 
+**v0.4.0 - 2024-07-22**
+* New mapping input->output volume based on linear segments.
+
 **v0.3.2 - 2024-04-23**
 * Improved logging and configuration file.
 * Added support for initial COM frequency tuning
