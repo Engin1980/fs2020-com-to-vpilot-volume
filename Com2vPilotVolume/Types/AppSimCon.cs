@@ -295,14 +295,19 @@ namespace eng.com2vPilotVolume.Types
     {
       try
       {
+        this.logger.Log(ELogging.LogLevel.DEBUG, "Openning connection to ESimCon.");
         this.eSimCon.Open();
+        this.logger.Log(ELogging.LogLevel.DEBUG, "Connection to ESimCon opened.");
 
         // on success:
         try
         {
+          this.logger.Log(ELogging.LogLevel.DEBUG, "Registering location types to ESimCon.");
           RegisterLocationTypesToSim();
+          this.logger.Log(ELogging.LogLevel.DEBUG, "Registering communication types to ESimCon.");
           RegisterComTypesToSimCon();
           this.logger.Log(ELogging.LogLevel.INFO, "Connection enabled.");
+          this.logger.Log(ELogging.LogLevel.DEBUG, "Updating status to Connected-No-Data");
           this.State.ConnectionStatus = EConnectionStatus.ConnectedNoData;
         }
         catch (Exception ex)
@@ -321,6 +326,7 @@ namespace eng.com2vPilotVolume.Types
     private void InitSimConCheckLatitude()
     {
       EAssert.IsTrue(this.latTypeId != TYPE_EMPTY);
+      this.logger.Log(ELogging.LogLevel.DEBUG, "Requesting latitude from ESimCon.");
       this.latRequestId = this.eSimCon.Values.Request(this.latTypeId);
     }
 

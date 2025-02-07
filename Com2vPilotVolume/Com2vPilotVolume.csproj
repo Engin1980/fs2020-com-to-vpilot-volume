@@ -12,11 +12,11 @@
     <Version>0.3.2</Version>
     <Title>FS2020 COM -&gt; vPilot Volume</Title>
     <Product>FS2020 COM -&gt; vPilot Volume</Product>
-    <AssemblyVersion>0.4.0.0</AssemblyVersion>
+    <AssemblyVersion>0.4.1.0</AssemblyVersion>
     <Description>A simple tool synchronizing in-plane COM radio volume with vPilot output volume.</Description>
     <RepositoryUrl>https://github.com/Engin1980/fs2020-com-to-vpilot-volume</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <FileVersion>0.4.0.0</FileVersion>
+    <FileVersion>0.4.1.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
