@@ -207,6 +207,9 @@ namespace eng.com2vPilotVolume.Types
           this.logger.Log(ELogging.LogLevel.INFO, "Checking simvar status...");
           InitSimConCheckLatitude();
           break;
+        default:
+          this.logger.Log(ELogging.LogLevel.INFO, "Ignored connection status: " + this.State.ConnectionStatus);
+          break;
       }
     }
 
