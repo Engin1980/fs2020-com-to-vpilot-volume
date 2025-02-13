@@ -19,6 +19,7 @@ using ESystem.Miscelaneous;
 using System.Reflection;
 using System.Linq.Expressions;
 using System.CodeDom;
+using static ESimConnect.Definitions.SimEvents.Client.AircraftRadio;
 
 namespace Com2vPilotVolume
 {
@@ -93,6 +94,8 @@ namespace Com2vPilotVolume
     public MainWindow()
     {
       InitializeComponent();
+
+      this.Title = $"FS2020 Com->VPilot Volume (ver. {Assembly.GetExecutingAssembly().GetName().Version})";
 
       // log init
       this.logger = Logger.Create(this, "MainWindow", false);

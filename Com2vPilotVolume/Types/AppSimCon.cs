@@ -331,6 +331,7 @@ namespace eng.com2vPilotVolume.Types
       EAssert.IsTrue(this.latTypeId != TYPE_EMPTY);
       this.logger.Log(ELogging.LogLevel.DEBUG, "Requesting latitude from ESimCon.");
       this.latRequestId = this.eSimCon.Values.Request(this.latTypeId);
+      this.logger.Log(ELogging.LogLevel.DEBUG, $"Requested latitude from ESimCon as {this.latRequestId}.");
     }
 
     private void ProcessFreqDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
