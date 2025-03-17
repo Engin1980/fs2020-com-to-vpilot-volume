@@ -18,12 +18,12 @@ namespace eng.com2vPilotVolume.Types
       string? ComChangedFile, double ComChangedFileVolume);
 
     private readonly Settings settings;
-    private readonly ELogging.Logger logger;
+    private readonly ESystem.Logging.Logger logger;
     public Sounds(Settings settings)
     {
       EAssert.Argument.IsNotNull(settings, nameof(settings));
       this.settings = settings;
-      this.logger = ELogging.Logger.Create(this, "Sound");
+      this.logger = ESystem.Logging.Logger.Create(this, "Sound");
     }
 
     public void PlayVolumeMax()
@@ -48,13 +48,13 @@ namespace eng.com2vPilotVolume.Types
 
     private void TryPlayMP3File(string? fileName, Volume volume)
     {
-      logger.Log(ELogging.LogLevel.DEBUG, $"Request to play {fileName} at volume {volume}.");
+      logger.Log(ESystem.Logging.LogLevel.DEBUG, $"Request to play {fileName} at volume {volume}.");
 
       if (fileName == null) return;
 
       if (System.IO.File.Exists(fileName) == false)
       {
-        logger.Log(ELogging.LogLevel.WARNING, $"File {fileName} not found, playing skipped.");
+        logger.Log(ESystem.Logging.LogLevel.WARNING, $"File {fileName} not found, playing skipped.");
       }
       else
         try
@@ -67,7 +67,7 @@ namespace eng.com2vPilotVolume.Types
         }
         catch (Exception ex)
         {
-          logger.Log(ELogging.LogLevel.WARNING, $"File {fileName} cannot be played. Reason: {ex.Message}");
+          logger.Log(ESystem.Logging.LogLevel.WARNING, $"File {fileName} cannot be played. Reason: {ex.Message}");
         }
     }
   }

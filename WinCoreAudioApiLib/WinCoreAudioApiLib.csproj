@@ -10,9 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="ELogging">
-      <HintPath>..\DLLs\ELogging.dll</HintPath>
-    </Reference>
     <Reference Include="ESystem">
       <HintPath>..\DLLs\ESystem.dll</HintPath>
     </Reference>

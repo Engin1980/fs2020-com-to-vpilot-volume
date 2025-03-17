@@ -120,7 +120,7 @@ namespace eng.com2vPilotVolume.Types
     private readonly SimVar<Volume>[] comVolumes;
     private readonly System.Timers.Timer connectionTimer;
     private readonly ESimConnect.ESimConnect eSimCon;
-    private readonly ELogging.Logger logger;
+    private readonly ESystem.Logging.Logger logger;
     private readonly Settings settings;
     private RequestId latRequestId = REQUEST_EMPTY;
     private TypeId latTypeId = TYPE_EMPTY;
@@ -139,8 +139,8 @@ namespace eng.com2vPilotVolume.Types
     public AppSimCon(AppSimCon.Settings settings)
     {
       EAssert.Argument.IsNotNull(settings, nameof(settings));
-      EAssert.Argument.IsTrue(settings.NumberOfComs >= 1);
-      EAssert.Argument.IsTrue(settings.ConnectionTimerInterval > 500);
+      EAssert.Argument.IsTrue(settings.NumberOfComs >= 1, nameof(settings), "settings.NumberOfComms must be positive int");
+      EAssert.Argument.IsTrue(settings.ConnectionTimerInterval > 500, nameof(settings), "setttings.ConnectionTimerInterval value must be greater than 500");
 
       this.settings = settings;
 
@@ -154,7 +154,7 @@ namespace eng.com2vPilotVolume.Types
         this.comFrequencies[i] = new SimVar<double>(COM_FREQUENCY_VAR.Replace("{i}", (i + 1).ToString()));
       }
 
-      this.logger = ELogging.Logger.Create(this, nameof(AppSimCon));
+      this.logger = ESystem.Logging.Logger.Create(this, nameof(AppSimCon));
       this.eSimCon = new();
       this.eSimCon.Disconnected += ESimCon_Disconnected;
 
@@ -169,7 +169,7 @@ namespace eng.com2vPilotVolume.Types
 
     private void ESimCon_Disconnected(ESimConnect.ESimConnect sender)
     {
-      this.logger.Log(ELogging.LogLevel.WARNING, "FS2020 disconnected. Retrying connection...");
+      this.logger.Log(ESystem.Logging.LogLevel.WARNING, "FS2020 disconnected. Retrying connection...");
       this.State.ConnectionStatus = EConnectionStatus.NotConnected;
       this.connectionTimer.Enabled = true;
     }
@@ -201,21 +201,21 @@ namespace eng.com2vPilotVolume.Types
       switch (this.State.ConnectionStatus)
       {
         case EConnectionStatus.NotConnected:
-          this.logger.Log(ELogging.LogLevel.INFO, "Reconnecting...");
+          this.logger.Log(ESystem.Logging.LogLevel.INFO, "Reconnecting...");
           InitSimConConnection(); break;
         case EConnectionStatus.ConnectedNoData:
-          this.logger.Log(ELogging.LogLevel.INFO, "Checking simvar status...");
+          this.logger.Log(ESystem.Logging.LogLevel.INFO, "Checking simvar status...");
           InitSimConCheckLatitude();
           break;
         default:
-          this.logger.Log(ELogging.LogLevel.INFO, "Ignored connection status: " + this.State.ConnectionStatus);
+          this.logger.Log(ESystem.Logging.LogLevel.INFO, "Ignored connection status: " + this.State.ConnectionStatus);
           break;
       }
     }
 
     private void ESimCon_DataReceived(ESimConnect.ESimConnect sender, ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
-      this.logger.Log(ELogging.LogLevel.INFO, $"Received data {e.RequestId}={e.Data}");
+      this.logger.Log(ESystem.Logging.LogLevel.INFO, $"Received data {e.RequestId}={e.Data}");
       if (this.latRequestId != REQUEST_EMPTY && this.latRequestId == e.RequestId)
         ProcessLatDataReceived(e);
       else if (this.comFrequencies.Any(q => q.RequestId == e.RequestId))
@@ -225,7 +225,7 @@ namespace eng.com2vPilotVolume.Types
       else if (this.comTransmits.Any(q => q.RequestId == e.RequestId))
         ProcessTransmitDataReceived(e);
       else
-        this.logger.Log(ELogging.LogLevel.WARNING, $"Received data with unknown requestId={e.RequestId}.");
+        this.logger.Log(ESystem.Logging.LogLevel.WARNING, $"Received data with unknown requestId={e.RequestId}.");
     }
 
     private void InitializeComTypesToSimCon()
@@ -237,7 +237,7 @@ namespace eng.com2vPilotVolume.Types
       if (this.settings.InitComTransmit != null)
       {
         if (this.settings.InitComTransmit.Length / 2 > this.settings.NumberOfComs)
-          this.logger.Log(ELogging.LogLevel.WARNING, $"Settings error: Init COM transmit vector is longer ({this.settings.InitComTransmit.Length / 2}) than number of COMs ({this.settings.NumberOfComs}). Initialization skipped.");
+          this.logger.Log(ESystem.Logging.LogLevel.WARNING, $"Settings error: Init COM transmit vector is longer ({this.settings.InitComTransmit.Length / 2}) than number of COMs ({this.settings.NumberOfComs}). Initialization skipped.");
         else
           for (int i = 0; i < this.settings.InitComTransmit.Length / 2; i++)
           {
@@ -245,10 +245,10 @@ namespace eng.com2vPilotVolume.Types
             if (val == -1) continue;
             if (val != 0 && val != 1)
             {
-              this.logger.Log(ELogging.LogLevel.WARNING, $"Config says transmit of COM {i + 1} should be set to {val}, but valid values are only -1/0/1. Skipping.");
+              this.logger.Log(ESystem.Logging.LogLevel.WARNING, $"Config says transmit of COM {i + 1} should be set to {val}, but valid values are only -1/0/1. Skipping.");
               continue;
             }
-            this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} transmit to {val}");
+            this.logger.Log(ESystem.Logging.LogLevel.INFO, $"Initializing COM {i + 1} transmit to {val}");
             this.eSimCon.Values.Send(this.comTransmits[i].TypeId, val);
           }
       }
@@ -256,7 +256,7 @@ namespace eng.com2vPilotVolume.Types
       if (this.settings.InitComVolume != null)
       {
         if (this.settings.InitComVolume.Length / 2 > this.settings.NumberOfComs)
-          this.logger.Log(ELogging.LogLevel.WARNING, $"Settings error: Init COM volume vector is longer ({this.settings.InitComVolume.Length / 2}) than number of COMs ({this.settings.NumberOfComs}). Initialization skipped.");
+          this.logger.Log(ESystem.Logging.LogLevel.WARNING, $"Settings error: Init COM volume vector is longer ({this.settings.InitComVolume.Length / 2}) than number of COMs ({this.settings.NumberOfComs}). Initialization skipped.");
         else
           for (int i = 0; i < this.settings.InitComVolume.Length / 2; i++)
           {
@@ -264,10 +264,10 @@ namespace eng.com2vPilotVolume.Types
             if (val == -1) continue;
             if (val < 0 || val > 1)
             {
-              this.logger.Log(ELogging.LogLevel.WARNING, $"Config says volume of COM {i + 1} should be set to {val}, but valid values are only -1 or 0..1. Skipping.");
+              this.logger.Log(ESystem.Logging.LogLevel.WARNING, $"Config says volume of COM {i + 1} should be set to {val}, but valid values are only -1 or 0..1. Skipping.");
               continue;
             }
-            this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} volume to {val}");
+            this.logger.Log(ESystem.Logging.LogLevel.INFO, $"Initializing COM {i + 1} volume to {val}");
             this.eSimCon.Values.Send(this.comVolumes[i].TypeId, val);
           }
       }
@@ -275,7 +275,7 @@ namespace eng.com2vPilotVolume.Types
       if (this.settings.InitComFrequency != null)
       {
         if (this.settings.InitComFrequency.Length / 2 > this.settings.NumberOfComs)
-          this.logger.Log(ELogging.LogLevel.WARNING, $"Settings error: Init COM frequency vector is longer ({this.settings.InitComFrequency.Length / 2}) than number of COMs ({this.settings.NumberOfComs}). Initialization skipped.");
+          this.logger.Log(ESystem.Logging.LogLevel.WARNING, $"Settings error: Init COM frequency vector is longer ({this.settings.InitComFrequency.Length / 2}) than number of COMs ({this.settings.NumberOfComs}). Initialization skipped.");
         else
           for (int i = 0; i < this.settings.InitComFrequency.Length / 2; i++)
           {
@@ -283,10 +283,10 @@ namespace eng.com2vPilotVolume.Types
             if (val == -1) continue;
             if (val < MIN_COM_FREQUENCY || val > MAX_COM_FREQUENCY)
             {
-              this.logger.Log(ELogging.LogLevel.WARNING, $"Config says frequency of COM {i + 1} should be set to {val}, but valid values are only -1 or {MIN_COM_FREQUENCY}..{MAX_COM_FREQUENCY}. Skipping.");
+              this.logger.Log(ESystem.Logging.LogLevel.WARNING, $"Config says frequency of COM {i + 1} should be set to {val}, but valid values are only -1 or {MIN_COM_FREQUENCY}..{MAX_COM_FREQUENCY}. Skipping.");
               continue;
             }
-            this.logger.Log(ELogging.LogLevel.INFO, $"Initializing COM {i + 1} frequency to {val}");
+            this.logger.Log(ESystem.Logging.LogLevel.INFO, $"Initializing COM {i + 1} frequency to {val}");
             string name = GetComRadioSetHzNameForComIndex(i + 1);
             uint value = (uint)(val * 1000000);
             this.eSimCon.ClientEvents.Invoke(name, value);
@@ -298,45 +298,45 @@ namespace eng.com2vPilotVolume.Types
     {
       try
       {
-        this.logger.Log(ELogging.LogLevel.DEBUG, "Openning connection to ESimCon.");
+        this.logger.Log(ESystem.Logging.LogLevel.DEBUG, "Openning connection to ESimCon.");
         this.eSimCon.Open();
-        this.logger.Log(ELogging.LogLevel.DEBUG, "Connection to ESimCon opened.");
+        this.logger.Log(ESystem.Logging.LogLevel.DEBUG, "Connection to ESimCon opened.");
 
         // on success:
         try
         {
-          this.logger.Log(ELogging.LogLevel.DEBUG, "Registering location types to ESimCon.");
+          this.logger.Log(ESystem.Logging.LogLevel.DEBUG, "Registering location types to ESimCon.");
           RegisterLocationTypesToSim();
-          this.logger.Log(ELogging.LogLevel.DEBUG, "Registering communication types to ESimCon.");
+          this.logger.Log(ESystem.Logging.LogLevel.DEBUG, "Registering communication types to ESimCon.");
           RegisterComTypesToSimCon();
-          this.logger.Log(ELogging.LogLevel.INFO, "Connection enabled.");
-          this.logger.Log(ELogging.LogLevel.DEBUG, "Updating status to Connected-No-Data");
+          this.logger.Log(ESystem.Logging.LogLevel.INFO, "Connection enabled.");
+          this.logger.Log(ESystem.Logging.LogLevel.DEBUG, "Updating status to Connected-No-Data");
           this.State.ConnectionStatus = EConnectionStatus.ConnectedNoData;
         }
         catch (Exception ex)
         {
-          this.logger.Log(ELogging.LogLevel.ERROR, "Fatal error registering simcon variables: " + ex.Message);
+          this.logger.Log(ESystem.Logging.LogLevel.ERROR, "Fatal error registering simcon variables: " + ex.Message);
           throw new ApplicationException("Failed to register simcon definitions.", ex);
         }
       }
       catch
       {
         // intentionally blank
-        this.logger.Log(ELogging.LogLevel.INFO, "Connection failed, will retry after a while...");
+        this.logger.Log(ESystem.Logging.LogLevel.INFO, "Connection failed, will retry after a while...");
       }
     }
 
     private void InitSimConCheckLatitude()
     {
       EAssert.IsTrue(this.latTypeId != TYPE_EMPTY);
-      this.logger.Log(ELogging.LogLevel.DEBUG, "Requesting latitude from ESimCon.");
+      this.logger.Log(ESystem.Logging.LogLevel.DEBUG, "Requesting latitude from ESimCon.");
       this.latRequestId = this.eSimCon.Values.Request(this.latTypeId);
-      this.logger.Log(ELogging.LogLevel.DEBUG, $"Requested latitude from ESimCon as {this.latRequestId}.");
+      this.logger.Log(ESystem.Logging.LogLevel.DEBUG, $"Requested latitude from ESimCon as {this.latRequestId}.");
     }
 
     private void ProcessFreqDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
-      this.logger.Log(ELogging.LogLevel.DEBUG, $"Frequency changed data received as {e.Data}");
+      this.logger.Log(ESystem.Logging.LogLevel.DEBUG, $"Frequency changed data received as {e.Data}");
       SimVar<double> cf = this.comFrequencies.First(q => q.RequestId == e.RequestId);
       cf.Value = (double)e.Data / 1e6;
       if (this.FrequencyChangedCallback is not null)
@@ -353,10 +353,10 @@ namespace eng.com2vPilotVolume.Types
 
     private void ProcessLatDataReceived(ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs e)
     {
-      this.logger.Log(ELogging.LogLevel.DEBUG, $"Init-check-var value obtained as {e.Data}");
+      this.logger.Log(ESystem.Logging.LogLevel.DEBUG, $"Init-check-var value obtained as {e.Data}");
       if (e.Data is double val && val != 0)
       {
-        this.logger.Log(ELogging.LogLevel.INFO, $"Init-check-var value valid, confirming connection.");
+        this.logger.Log(ESystem.Logging.LogLevel.INFO, $"Init-check-var value valid, confirming connection.");
         this.State.ConnectionStatus = EConnectionStatus.ConnectedWithData;
         this.connectionTimer.Enabled = false;
 
@@ -369,10 +369,10 @@ namespace eng.com2vPilotVolume.Types
       var ct = this.comTransmits.First(q => q.RequestId == e.RequestId);
       int index = Array.IndexOf(this.comTransmits, ct);
       ct.Value = ((double)e.Data) != 0;
-      this.logger.Log(ELogging.LogLevel.INFO, $"COM{index + 1} transmit changed to {ct.Value}");
+      this.logger.Log(ESystem.Logging.LogLevel.INFO, $"COM{index + 1} transmit changed to {ct.Value}");
       if (ct.Value)
       {
-        this.logger.Log(ELogging.LogLevel.INFO, $"Sending new volume {this.comVolumes[index].Value} to vPilot");
+        this.logger.Log(ESystem.Logging.LogLevel.INFO, $"Sending new volume {this.comVolumes[index].Value} to vPilot");
         this.State.ActiveComIndex = index + 1;
         this.State.ActiveComVolume = this.comVolumes[index].Value;
         this.State.ActiveComFrequency = this.comFrequencies[index].Value;
@@ -387,10 +387,10 @@ namespace eng.com2vPilotVolume.Types
 
       double volumeDouble = (double)e.Data;
       cv.Value = volumeDouble;
-      this.logger.Log(ELogging.LogLevel.INFO, $"COM{index + 1} volume changed to {cv.Value}");
+      this.logger.Log(ESystem.Logging.LogLevel.INFO, $"COM{index + 1} volume changed to {cv.Value}");
       if (this.comTransmits[index].Value)
       {
-        this.logger.Log(ELogging.LogLevel.INFO, $"Sending new volume {cv.Value} to vPilot");
+        this.logger.Log(ESystem.Logging.LogLevel.INFO, $"Sending new volume {cv.Value} to vPilot");
         this.State.ActiveComVolume = cv.Value;
         this.VolumeUpdateCallback?.Invoke(cv.Value);
       }
@@ -403,25 +403,25 @@ namespace eng.com2vPilotVolume.Types
       for (int i = 0; i < this.settings.NumberOfComs; i++)
       {
         var cv = this.comVolumes[i];
-        this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} VOLUME registering via {cv.Name}.");
+        this.logger.Log(ESystem.Logging.LogLevel.INFO, $"COM {i + 1} VOLUME registering via {cv.Name}.");
         this.comVolumes[i].TypeId = this.eSimCon.Values.Register<double>(cv.Name);
         requestId = this.eSimCon.Values.RequestRepeatedly(cv.TypeId, SimConnectPeriod.SIM_FRAME, true);
         cv.RequestId = requestId;
-        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} VOLUME registered via {cv.RegInfo}");
+        this.logger.Log(ESystem.Logging.LogLevel.DEBUG, $"COM {i + 1} VOLUME registered via {cv.RegInfo}");
 
         var ct = this.comTransmits[i];
-        this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} TRANSMIT registering via {ct.Name}.");
+        this.logger.Log(ESystem.Logging.LogLevel.INFO, $"COM {i + 1} TRANSMIT registering via {ct.Name}.");
         ct.TypeId = this.eSimCon.Values.Register<double>(ct.Name);
         requestId = this.eSimCon.Values.RequestRepeatedly(ct.TypeId, SimConnectPeriod.SIM_FRAME, true);
         ct.RequestId = requestId;
-        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} TRANSMIT registered via {ct.RegInfo}.");
+        this.logger.Log(ESystem.Logging.LogLevel.DEBUG, $"COM {i + 1} TRANSMIT registered via {ct.RegInfo}.");
 
         var cf = comFrequencies[i];
-        this.logger.Log(ELogging.LogLevel.INFO, $"COM {i + 1} FREQ registering via {cf.Name}");
+        this.logger.Log(ESystem.Logging.LogLevel.INFO, $"COM {i + 1} FREQ registering via {cf.Name}");
         cf.TypeId = this.eSimCon.Values.Register<double>(cf.Name);
         requestId = this.eSimCon.Values.RequestRepeatedly(cf.TypeId, SimConnectPeriod.SECOND, true);
         cf.RequestId = requestId;
-        this.logger.Log(ELogging.LogLevel.DEBUG, $"COM {i + 1} FREQ registered via {cf.RegInfo}");
+        this.logger.Log(ESystem.Logging.LogLevel.DEBUG, $"COM {i + 1} FREQ registered via {cf.RegInfo}");
       }
     }
 
@@ -429,7 +429,7 @@ namespace eng.com2vPilotVolume.Types
     {
       EAssert.IsTrue(this.latTypeId == TYPE_EMPTY);
 
-      this.logger.Log(ELogging.LogLevel.INFO, $"Registering init-check-var, confirming connection.");
+      this.logger.Log(ESystem.Logging.LogLevel.INFO, $"Registering init-check-var, confirming connection.");
       string name = this.settings.InitializedCheckVar;
       this.latTypeId = this.eSimCon.Values.Register<double>(name);
     }

@@ -36,9 +36,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="ELogging">
-      <HintPath>..\DLLs\ELogging.dll</HintPath>
-    </Reference>
     <Reference Include="ESimConnect">
       <HintPath>..\DLLs\ESimConnect.dll</HintPath>
     </Reference>

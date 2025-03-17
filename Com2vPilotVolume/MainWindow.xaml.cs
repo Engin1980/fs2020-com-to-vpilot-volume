@@ -14,7 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ESystem.Asserting;
 using Microsoft.Extensions.Configuration;
-using ELogging;
+using ESystem.Logging;
 using ESystem.Miscelaneous;
 using System.Reflection;
 using System.Linq.Expressions;

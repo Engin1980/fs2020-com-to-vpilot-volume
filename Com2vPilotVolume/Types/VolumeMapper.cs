@@ -1,4 +1,4 @@
-﻿using ELogging;
+﻿using ESystem.Logging;
 using ESystem.Asserting;
 using Microsoft.Windows.Themes;
 using System;
@@ -7,13 +7,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static ESimConnect.Definitions.SimEvents;
 
 namespace eng.com2vPilotVolume.Types
 {
   internal class VolumeMapper
   {
     public record Settings(double[][] Map, double MinimumThreshold);
-    public readonly ELogging.Logger logger;
+    public readonly ESystem.Logging.Logger logger;
     private record VolumeMap(double Input, double Output);
     private readonly List<VolumeMap> volumeMapping;
     private readonly double minimumThreshold;
@@ -24,9 +25,9 @@ namespace eng.com2vPilotVolume.Types
       EAssert.Argument.IsNotNull(settings, nameof(settings));
       EAssert.Argument.IsNotNull(settings.Map, nameof(settings) + "." + nameof(settings.Map));
 
-      this.logger = ELogging.Logger.Create(this, nameof(AppSimCon));
+      this.logger = ESystem.Logging.Logger.Create(this, nameof(AppSimCon));
 
-      this.logger.Log(LogLevel.DEBUG, $"Object construction requested.");
+      this.logger.Log(ESystem.Logging.LogLevel.DEBUG, $"Object construction requested.");
 
       this.volumeMapping = CreateMapping(settings.Map);
       this.minimumThreshold = settings.MinimumThreshold;
@@ -42,9 +43,9 @@ namespace eng.com2vPilotVolume.Types
     private List<VolumeMap> CreateMapping(double[][] volumeMapping)
     {
       EAssert.Argument.IsNotNull(volumeMapping, nameof(volumeMapping));
-      EAssert.Argument.IsTrue(volumeMapping.All(q => q.Length == 2), "All values of 'volumeMapping' must be numeric tuples");
-      EAssert.Argument.IsTrue(volumeMapping.All(q => q[0] >= 0 && q[0] <= 100), "All input values of 'volumeMapping' must be between 0 .. 100");
-      EAssert.Argument.IsTrue(volumeMapping.All(q => q[1] >= 0 && q[1] <= 100), "All output values of 'volumeMapping' must be between 0 .. 100");
+      EAssert.Argument.IsTrue(volumeMapping.All(q => q.Length == 2), nameof(volumeMapping), "All values of 'volumeMapping' must be numeric tuples");
+      EAssert.Argument.IsTrue(volumeMapping.All(q => q[0] >= 0 && q[0] <= 100), nameof(volumeMapping), "All input values of 'volumeMapping' must be between 0 .. 100");
+      EAssert.Argument.IsTrue(volumeMapping.All(q => q[1] >= 0 && q[1] <= 100), nameof(volumeMapping), "All output values of 'volumeMapping' must be between 0 .. 100");
 
       List<VolumeMap> ret = volumeMapping
         .DistinctBy(q => q[0])
@@ -86,7 +87,7 @@ namespace eng.com2vPilotVolume.Types
         this.logger.Log(LogLevel.DEBUG, $"Minimum thresholding applied on {d} < {this.minimumThreshold}.");
         d = 0;
       }
-        
+
 
       ret = d / 100d;
       this.logger.Log(LogLevel.INFO, $"Mapped {inputVolume} into {ret}.");
