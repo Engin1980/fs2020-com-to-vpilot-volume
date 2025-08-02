@@ -10,7 +10,7 @@ namespace Com2vPilotVolume
   /// <summary>
   /// Interaction logic for App.xaml
   /// </summary>
-  public partial class App : Application
+  public partial class App : System.Windows.Application
   {
     public static IConfiguration Configuration { get; private set; } = null!;
     

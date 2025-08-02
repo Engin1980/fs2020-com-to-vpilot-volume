@@ -1,7 +1,14 @@
 ﻿using eng.com2vPilotVolume.Types;
 using Eng.WinCoreAudioApiLib;
+using ESystem.Asserting;
+using ESystem.Logging;
+using ESystem.Miscelaneous;
+using Microsoft.Extensions.Configuration;
+using System.CodeDom;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,13 +19,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using ESystem.Asserting;
-using Microsoft.Extensions.Configuration;
-using ESystem.Logging;
-using ESystem.Miscelaneous;
-using System.Reflection;
-using System.Linq.Expressions;
-using System.CodeDom;
 using static ESimConnect.Definitions.SimEvents.Client.AircraftRadio;
 
 namespace Com2vPilotVolume
@@ -80,6 +80,8 @@ namespace Com2vPilotVolume
     private readonly Logger logger = null!;
     private double lastActiveComFrequency = 0;
     private int lastActiveComIndex = 1;
+    private bool isInitialized = false;
+    private readonly NotifyIcon? notifyIcon = null;
 
     #endregion Private Fields
 
@@ -116,9 +118,20 @@ namespace Com2vPilotVolume
       {
         this.logger.Log(LogLevel.ERROR, "Failed to initialize from config file.");
         this.logger.Log(LogLevel.ERROR, ex.ToString());
-        this.logger.Log(LogLevel.ERROR, "Application will now quit.");
-        Application.Current.Shutdown();
+        this.logger.Log(LogLevel.ERROR, "Application will not run.");
+        this.isInitialized = false;
         return;
+      }
+      try
+      {
+        this.notifyIcon = CreateNotifyIcon();
+      }
+      catch (Exception ex)
+      {
+        this.notifyIcon = null!;
+        this.logger.Log(LogLevel.ERROR, "Failed to initialize notify icon.");
+        this.logger.Log(LogLevel.ERROR, ex.ToString());
+        this.logger.Log(LogLevel.ERROR, "App minimalization may work in a strange way/or crash.");
       }
 
       this.appSimCon.VolumeUpdateCallback += appSimCon_VolumeUpdateCallback;
@@ -133,6 +146,23 @@ namespace Com2vPilotVolume
         ShowSimpleAdjustButtons = sett.ShowSimpleAdjustButtons
       };
       this.DataContext = this.Model;
+      this.isInitialized = true;
+    }
+
+    private NotifyIcon CreateNotifyIcon()
+    {
+      NotifyIcon ret = new()
+      {
+        Icon = new Icon("icon.ico"),
+        Visible = false,
+        Text = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? "Com2VPilotVolume",
+      };
+      ret.Click += (s, e) =>
+      {
+        this.Show();
+        this.WindowState = WindowState.Normal;
+      };
+      return ret;
     }
 
     private void appSimCon_FrequencyChangedCallback(double newFrequency)
@@ -219,7 +249,7 @@ namespace Com2vPilotVolume
         this.logger.Log(LogLevel.ERROR, "Failed to initialize local app log.");
         this.logger.Log(LogLevel.ERROR, ex.ToString());
         this.logger.Log(LogLevel.ERROR, "Application will now quit.");
-        Application.Current.Shutdown();
+        System.Windows.Application.Current.Shutdown();
         return;
       }
 
@@ -237,17 +267,33 @@ namespace Com2vPilotVolume
 
     private void Window_Closed(object sender, EventArgs e)
     {
-      Application.Current.Shutdown();
+      System.Windows.Application.Current.Shutdown();
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
+      if (this.isInitialized == false) return;
+
       this.logger.Log(LogLevel.INFO, "Window_Loaded invoked");
 
       this.appSimCon.Start();
       this.appVPilot.Start();
 
       PrintAbout();
+    }
+
+    private void Window_StateChanged(object sender, EventArgs e)
+    {
+      if (notifyIcon != null && WindowState == WindowState.Minimized && this.Visibility == Visibility.Visible)
+      {
+        Hide();
+      }
+    }
+
+    private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+      if (this.notifyIcon != null)
+        this.notifyIcon.Visible = this.Visibility != Visibility.Visible;
     }
 
     private void btnInputSet_Click(object sender, RoutedEventArgs e)

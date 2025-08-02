@@ -9,6 +9,8 @@
         Title="FS2020 Com -> VPilot Volume" Height="450" Width="800"
         Loaded="Window_Loaded"
         Closed="Window_Closed"
+        StateChanged="Window_StateChanged"
+        IsVisibleChanged="Window_IsVisibleChanged"
         Icon="icon.ico"
         Style="{StaticResource WinAll}">
   <Window.Resources>

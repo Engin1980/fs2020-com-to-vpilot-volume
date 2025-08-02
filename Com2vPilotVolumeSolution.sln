@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinCoreAudioApiLib", "WinCo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DLLs", "DLLs", "{FA29EBA6-C4C0-47CD-A074-6931988FF386}"
 	ProjectSection(SolutionItems) = preProject
-		DLLs\ELogging.dll = DLLs\ELogging.dll
-		DLLs\ELogging.pdb = DLLs\ELogging.pdb
 		DLLs\ESimConnect.deps.json = DLLs\ESimConnect.deps.json
 		DLLs\ESimConnect.dll = DLLs\ESimConnect.dll
 		DLLs\ESimConnect.pdb = DLLs\ESimConnect.pdb

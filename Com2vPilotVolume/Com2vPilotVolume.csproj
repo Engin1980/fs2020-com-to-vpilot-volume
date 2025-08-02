@@ -12,15 +12,18 @@
     <Version>0.3.2</Version>
     <Title>FS2020 COM -&gt; vPilot Volume</Title>
     <Product>FS2020 COM -&gt; vPilot Volume</Product>
-    <AssemblyVersion>0.4.2.6</AssemblyVersion>
+    <AssemblyVersion>0.5.0.0</AssemblyVersion>
     <Description>A simple tool synchronizing in-plane COM radio volume with vPilot output volume.</Description>
     <RepositoryUrl>https://github.com/Engin1980/fs2020-com-to-vpilot-volume</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <FileVersion>0.4.2.6</FileVersion>
+    <FileVersion>0.5.0.0</FileVersion>
+		<UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="icon.ico" />
+    <Content Include="icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -56,6 +59,9 @@
     </None>
     <None Update="icon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="icon.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Update="Sounds\change.mp3">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
