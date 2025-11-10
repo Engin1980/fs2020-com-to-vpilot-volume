@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace eng.com2vPilotVolume.Types
 {
-  public struct Volume
+  public readonly struct Volume
   {
     private readonly double value;
 
@@ -17,7 +17,7 @@ namespace eng.com2vPilotVolume.Types
     }
 
     public static implicit operator double(Volume value) => value.value;
-    public static implicit operator Volume(double value) => new Volume(value);
+    public static implicit operator Volume(double value) => new(value);
 
     public override string ToString() => $"{value * 100:0.00} %";
   }

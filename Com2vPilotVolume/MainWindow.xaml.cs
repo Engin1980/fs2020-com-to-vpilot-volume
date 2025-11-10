@@ -1,4 +1,5 @@
-﻿using eng.com2vPilotVolume.Types;
+﻿using eng.com2vPilotVolume.Services;
+using eng.com2vPilotVolume.Types;
 using Eng.WinCoreAudioApiLib;
 using ESystem.Asserting;
 using ESystem.Logging;
@@ -29,6 +30,7 @@ namespace Com2vPilotVolume
   public partial class MainWindow : Window
   {
     public record Settings(int[] StartupWindowSize, bool ShowSimpleAdjustButtons, bool ShowDebugButtons);
+    public record Services(SimConService SimConService, VPilotService VPilotService, KeyHookService KeyHookService, SoundService SoundService);
 
     #region Public Classes
 
@@ -36,8 +38,8 @@ namespace Com2vPilotVolume
     {
       #region Public Properties
 
-      public AppSimCon.StateViewModel SimConState { get; private set; }
-      public AppVPilot.StateViewModel VPilotState { get; private set; }
+      public SimConService.StateViewModel SimConState { get; private set; }
+      public VPilotService.StateViewModel VPilotState { get; private set; }
 
 
       public double CustomVolume
@@ -56,7 +58,7 @@ namespace Com2vPilotVolume
 
       #region Public Constructors
 
-      public ViewModel(AppSimCon.StateViewModel simConState, AppVPilot.StateViewModel vpilotState)
+      public ViewModel(SimConService.StateViewModel simConState, VPilotService.StateViewModel vpilotState)
       {
         EAssert.Argument.IsNotNull(simConState, nameof(simConState));
         EAssert.Argument.IsNotNull(vpilotState, nameof(vpilotState));
@@ -73,9 +75,7 @@ namespace Com2vPilotVolume
 
     #region Private Fields
 
-    private readonly Sounds sounds = null!;
-    private readonly AppSimCon appSimCon = null!;
-    private readonly AppVPilot appVPilot = null!;
+    private readonly Services services = null!;
     private readonly VolumeMapper volumeMapper = null!;
     private readonly Logger logger = null!;
     private double lastActiveComFrequency = 0;
@@ -95,7 +95,7 @@ namespace Com2vPilotVolume
 
     public MainWindow()
     {
-      InitializeComponent();
+      InitializeComponent();      
 
       this.Title = $"FS2020 Com->VPilot Volume (ver. {Assembly.GetExecutingAssembly().GetName().Version})";
 
@@ -104,24 +104,40 @@ namespace Com2vPilotVolume
       InitLog();
 
       // app init
-      MainWindow.Settings sett;
+      MainWindowConfig sett;
       try
       {
         var cfg = App.Configuration;
-        this.appVPilot = new(cfg.GetSection("AppVPilot").Get<AppVPilot.Settings>() ?? throw new ConfigLoadFailedException("AppVPilot"));
-        this.appSimCon = new(cfg.GetSection("AppSimCon").Get<AppSimCon.Settings>() ?? throw new ConfigLoadFailedException("AppSimCon"));
-        this.volumeMapper = new(cfg.GetSection("VolumeMapping").Get<VolumeMapper.Settings>() ?? throw new ConfigLoadFailedException("VolumeMapping"));
-        this.sounds = new(cfg.GetSection("Sounds").Get<Sounds.Settings>() ?? throw new ConfigLoadFailedException("Sounds"));
-        sett = cfg.GetSection("MainWindow").Get<MainWindow.Settings>() ?? throw new ConfigLoadFailedException("MainWindow");
+        sett = App.AppSettings.MainWindow;
       }
       catch (Exception ex)
       {
         this.logger.Log(LogLevel.ERROR, "Failed to initialize from config file.");
         this.logger.Log(LogLevel.ERROR, ex.ToString());
-        this.logger.Log(LogLevel.ERROR, "Application will not run.");
+        this.logger.Log(LogLevel.ERROR, "Application start-up aborted.");
         this.isInitialized = false;
         return;
       }
+
+      this.volumeMapper = new(App.AppSettings.VolumeMapping);
+
+      try
+      {
+        this.services = new Services(
+          new SimConService(App.AppSettings.AppSimCon),
+          new VPilotService(App.AppSettings.AppVPilot),
+          new KeyHookService(App.AppSettings.KeyboardMappings),
+          new SoundService(App.AppSettings.Sounds)
+          );
+      } catch (Exception ex)
+      {
+        this.logger.Log(LogLevel.ERROR, "Failed to initialize services.");
+        this.logger.Log(LogLevel.ERROR, ex.ToString());
+        this.logger.Log(LogLevel.ERROR, "Application start-up aborted.");
+        this.isInitialized = false;
+        return;
+      }
+
       try
       {
         this.notifyIcon = CreateNotifyIcon();
@@ -134,14 +150,16 @@ namespace Com2vPilotVolume
         this.logger.Log(LogLevel.ERROR, "App minimalization may work in a strange way/or crash.");
       }
 
-      this.appSimCon.VolumeUpdateCallback += appSimCon_VolumeUpdateCallback;
-      this.appSimCon.ActiveComChangedCallback += appSimCon_ActiveComChangedCallback;
-      this.appSimCon.FrequencyChangedCallback += appSimCon_FrequencyChangedCallback;
+      this.services.SimConService.VolumeUpdateCallback += appSimCon_VolumeUpdateCallback;
+      this.services.SimConService.ActiveComChangedCallback += appSimCon_ActiveComChangedCallback;
+      this.services.SimConService.FrequencyChangedCallback += appSimCon_FrequencyChangedCallback;
 
       this.Width = sett.StartupWindowSize[0];
       this.Height = sett.StartupWindowSize[1];
 
-      this.Model = new ViewModel(this.appSimCon.State, this.appVPilot.State)
+      this.Model = new ViewModel(
+        this.services.SimConService.State, 
+        this.services.VPilotService.State)
       {
         ShowSimpleAdjustButtons = sett.ShowSimpleAdjustButtons
       };
@@ -170,7 +188,7 @@ namespace Com2vPilotVolume
       if (newFrequency != this.lastActiveComFrequency)
       {
         this.lastActiveComFrequency = newFrequency;
-        this.sounds.PlayFrequencyChanged();
+        this.services.SoundService.PlayFrequencyChanged();
       }
     }
 
@@ -180,7 +198,7 @@ namespace Com2vPilotVolume
       {
         this.lastActiveComFrequency = 0;
         this.lastActiveComIndex = comIndex;
-        this.sounds.PlayComChanged();
+        this.services.SoundService.PlayComChanged();
       }
     }
 
@@ -188,11 +206,11 @@ namespace Com2vPilotVolume
     {
       Volume winVolume = volumeMapper.Map(simVolume);
 
-      this.appVPilot.SetVolume(winVolume);
+      this.services.VPilotService.SetVolume(winVolume);
       if (winVolume == 1)
-        this.sounds.PlayVolumeMax();
+        this.services.SoundService.PlayVolumeMax();
       else if (winVolume == 0)
-        this.sounds.PlayVolumeMin();
+        this.services.SoundService.PlayVolumeMin();
     }
 
     #endregion Public Constructors
@@ -270,14 +288,28 @@ namespace Com2vPilotVolume
       System.Windows.Application.Current.Shutdown();
     }
 
-    private void Window_Loaded(object sender, RoutedEventArgs e)
+    private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
       if (this.isInitialized == false) return;
 
       this.logger.Log(LogLevel.INFO, "Window_Loaded invoked");
 
-      this.appSimCon.Start();
-      this.appVPilot.Start();
+      List<Task> tasks = [];
+      Task t;
+
+      t = this.services.VPilotService.StartAsync();
+      tasks.Add(t);
+
+      t = this.services.SimConService.StartAsync();
+      tasks.Add(t);
+
+      t = this.services.KeyHookService.StartAsync();
+      tasks.Add(t);
+
+      t = this.services.SoundService.StartAsync();
+      tasks.Add(t);
+
+      await Task.WhenAll(tasks);
 
       PrintAbout();
     }

@@ -14,20 +14,19 @@ namespace eng.com2vPilotVolume.Types
   internal class VolumeMapper
   {
     public record Settings(double[][] Map, double MinimumThreshold);
-    public readonly ESystem.Logging.Logger logger;
+    public readonly Logger logger;
     private record VolumeMap(double Input, double Output);
     private readonly List<VolumeMap> volumeMapping;
     private readonly double minimumThreshold;
 
 
-    public VolumeMapper(Settings settings)
+    public VolumeMapper(VolumeMappingConfig settings)
     {
       EAssert.Argument.IsNotNull(settings, nameof(settings));
       EAssert.Argument.IsNotNull(settings.Map, nameof(settings) + "." + nameof(settings.Map));
 
-      this.logger = ESystem.Logging.Logger.Create(this, nameof(AppSimCon));
-
-      this.logger.Log(ESystem.Logging.LogLevel.DEBUG, $"Object construction requested.");
+      this.logger = Logger.Create(this, nameof(VolumeMapper));
+      this.logger.Log(LogLevel.DEBUG, $"Object construction requested.");
 
       this.volumeMapping = CreateMapping(settings.Map);
       this.minimumThreshold = settings.MinimumThreshold;
