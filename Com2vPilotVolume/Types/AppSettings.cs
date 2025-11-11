@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace eng.com2vPilotVolume.Types
+namespace Eng.Com2vPilotVolume.Types
 {
   public class AppSettings
   {

@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static ESimConnect.Definitions.SimEvents;
 
-namespace eng.com2vPilotVolume.Types
+namespace Eng.Com2vPilotVolume.Types
 {
   internal class VolumeMapper
   {

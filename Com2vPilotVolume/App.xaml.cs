@@ -1,4 +1,4 @@
-﻿using eng.com2vPilotVolume.Types;
+﻿using Eng.Com2vPilotVolume.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -7,7 +7,7 @@ using System.Data;
 using System.IO;
 using System.Windows;
 
-namespace Com2vPilotVolume;
+namespace Eng.Com2vPilotVolume;
 
 /// <summary>
 /// Interaction logic for App.xaml

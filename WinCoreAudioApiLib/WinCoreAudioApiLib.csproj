@@ -1,5 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0-windows7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -7,12 +7,11 @@
     <RootNamespace>Eng.WinCoreAudioApiLib</RootNamespace>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <FileVersion>1.2.0.0</FileVersion>
+    <Version>1.2.0.0</Version>
   </PropertyGroup>
-
   <ItemGroup>
     <Reference Include="ESystem">
       <HintPath>..\DLLs\ESystem.dll</HintPath>
     </Reference>
   </ItemGroup>
-
 </Project>

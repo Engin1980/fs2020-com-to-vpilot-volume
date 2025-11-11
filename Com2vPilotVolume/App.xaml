@@ -1,7 +1,7 @@
-﻿<Application x:Class="Com2vPilotVolume.App"
+﻿<Application x:Class="Eng.Com2vPilotVolume.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Com2vPilotVolume"
+             xmlns:local="clr-namespace:Eng.Com2vPilotVolume"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
     <Style x:Key="WinAll" TargetType="{x:Type Window}">

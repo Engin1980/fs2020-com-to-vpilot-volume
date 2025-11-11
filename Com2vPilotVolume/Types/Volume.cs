@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace eng.com2vPilotVolume.Types
+namespace Eng.Com2vPilotVolume.Types
 {
   public readonly struct Volume
   {

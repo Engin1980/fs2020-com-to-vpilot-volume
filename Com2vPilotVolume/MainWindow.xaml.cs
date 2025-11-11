@@ -1,6 +1,6 @@
-﻿using eng.com2vPilotVolume;
-using eng.com2vPilotVolume.Services;
-using eng.com2vPilotVolume.Types;
+﻿using Eng.Com2vPilotVolume;
+using Eng.Com2vPilotVolume.Services;
+using Eng.Com2vPilotVolume.Types;
 using Eng.WinCoreAudioApiLib;
 using ESystem.Asserting;
 using ESystem.Logging;
@@ -23,7 +23,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using static ESimConnect.Definitions.SimEvents.Client.AircraftRadio;
 
-namespace Com2vPilotVolume
+namespace Eng.Com2vPilotVolume
 {
   /// <summary>
   /// Interaction logic for MainWindow.xaml
@@ -171,10 +171,10 @@ namespace Com2vPilotVolume
 
     private void LogServiceProviderErrors(List<string> errors)
     {
-      ESystem.Logging.Logger logger = ESystem.Logging.Logger.Create("SettingsProvider");
+      var logger = Logger.Create("SettingsProvider");
       foreach (var error in errors)
       {
-        logger.Log(ESystem.Logging.LogLevel.ERROR, error);
+        logger.Log(LogLevel.ERROR, error);
       }
     }
 

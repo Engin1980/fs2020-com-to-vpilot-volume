@@ -1,4 +1,4 @@
-﻿using eng.com2vPilotVolume.Types;
+﻿using Eng.Com2vPilotVolume.Types;
 using ESimConnect;
 using ESystem.Asserting;
 using ESystem.Miscelaneous;
@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace eng.com2vPilotVolume.Services
+namespace Eng.Com2vPilotVolume.Services
 {
   public class SimConService : BaseService
   {

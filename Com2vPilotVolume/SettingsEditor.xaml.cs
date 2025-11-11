@@ -20,7 +20,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace eng.com2vPilotVolume
+namespace Eng.Com2vPilotVolume
 {
   /// <summary>
   /// Interaction logic for SettingsEditor.xaml
@@ -58,7 +58,7 @@ namespace eng.com2vPilotVolume
 
     private void LoadUserJsonFile()
     {
-      var json = System.IO.File.ReadAllText("appsettings.json");
+      var json = System.IO.File.ReadAllText(Eng.Com2vPilotVolume.Types.SettingsProvider.UserConfigFilePath);
       txtJson.Text = json;
     }
 
@@ -96,7 +96,7 @@ namespace eng.com2vPilotVolume
 
         if (!valid && validationErrors != null)
         {
-          List<string> tmp = [];
+          List<string> tmp = new List<string>();
           CollectErrors(validationErrors, tmp);
           foreach (var errMsg in tmp)
           {
@@ -121,7 +121,7 @@ namespace eng.com2vPilotVolume
       foreach (var err in validationErrors)
       {
         string path = string.IsNullOrWhiteSpace(err.Path) ? "(root)" : err.Path;
-        output.Add($"{err.Message} Path '${err.Path}', line ${err.LineNumber}, position {err.LinePosition}.");
+        output.Add($"{err.Message} Path '{err.Path}', line {err.LineNumber}, position {err.LinePosition}.");
 
         // Vnořené chyby (např. u objektů nebo polí)
         if (err.ChildErrors != null && err.ChildErrors.Count > 0)
@@ -164,34 +164,114 @@ namespace eng.com2vPilotVolume
 
     private void btnSchema_Click(object sender, RoutedEventArgs e)
     {
-      // open file "applications.schema.json" in explorer
+      try
+      {
+        string schemaPath = System.IO.Path.GetFullPath("appsettings.schema.json");
+        if (!System.IO.File.Exists(schemaPath))
+        {
+          System.Windows.MessageBox.Show(this, $"Schema file not found:\n{schemaPath}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          return;
+        }
+
+        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{schemaPath}\"") { UseShellExecute = true });
+      }
+      catch (Exception ex)
+      {
+        System.Windows.MessageBox.Show(this, $"Unable to open schema file in Explorer:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+      }
     }
 
     private void btnReload_Click(object sender, RoutedEventArgs e)
     {
-      // ask for confirmation, then use LoadUserJsonFile();
+      var result = System.Windows.MessageBox.Show(this, "Reload will discard unsaved changes. Do you want to continue?", "Confirm reload", MessageBoxButton.YesNo, MessageBoxImage.Question);
+      if (result == MessageBoxResult.Yes)
+      {
+        try
+        {
+          LoadUserJsonFile();
+        }
+        catch (Exception ex)
+        {
+          System.Windows.MessageBox.Show(this, $"Unable to reload user JSON file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+      }
     }
 
     private void btnDiscard_Click(object sender, RoutedEventArgs e)
     {
-      // ask for confirmation, then close this window
+      var result = System.Windows.MessageBox.Show(this, "Discard changes and close the editor?", "Confirm discard", MessageBoxButton.YesNo, MessageBoxImage.Question);
+      if (result == MessageBoxResult.Yes)
+      {
+        this.Close();
+      }
     }
 
     private void btnSave_Click(object sender, RoutedEventArgs e)
     {
-      //do nothing
+      var resultConfirm = System.Windows.MessageBox.Show(this, "Are you sure you want to save the changes to the user config file? This will overwrite the existing file.", "Confirm save", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+      if (resultConfirm != MessageBoxResult.Yes)
+      {
+        return;
+      }
+
+      string file = Eng.Com2vPilotVolume.Types.SettingsProvider.UserConfigFilePath;
+      try
+      {
+        System.IO.File.WriteAllText(file, txtJson.Text, Encoding.UTF8);
+        System.Windows.MessageBox.Show(this, $"User config file saved successfully:\n{file}", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+      }
+      catch (Exception ex)
+      {
+        System.Windows.MessageBox.Show(this, $"Unable to save user config file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        return;
+      }
+
+      var result = System.Windows.MessageBox.Show(this, "Settings saved. A hard restart of the application is required to apply the changes. Do you want to close the application now?", "Restart required", MessageBoxButton.YesNo, MessageBoxImage.Question);
+      if (result == MessageBoxResult.Yes)
+      {
+        Process.Start(System.Windows.Application.ResourceAssembly.Location);
+        System.Windows.Application.Current.Shutdown();
+      }
     }
 
 
     private void btnUserFile_Click(object sender, RoutedEventArgs e)
     {
-      string file = eng.com2vPilotVolume.Types.SettingsProvider.UserConfigFilePath;
-      // open file in explorer
+      string file = Eng.Com2vPilotVolume.Types.SettingsProvider.UserConfigFilePath;
+      try
+      {
+        if (string.IsNullOrWhiteSpace(file) || !System.IO.File.Exists(file))
+        {
+          System.Windows.MessageBox.Show(this, $"User config file not found:\n{file}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          return;
+        }
+
+        var psi = new ProcessStartInfo("explorer.exe", $"/select,\"{System.IO.Path.GetFullPath(file)}\"") { UseShellExecute = true };
+        Process.Start(psi);
+      }
+      catch (Exception ex)
+      {
+        System.Windows.MessageBox.Show(this, $"Unable to open user config file in Explorer:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+      }
     }
 
     private void btnDefaultFile_Click(object sender, RoutedEventArgs e)
     {
-      // open file "applications.json" in explorer
+      try
+      {
+        string defaultPath = System.IO.Path.GetFullPath("appSettings.json");
+        if (!System.IO.File.Exists(defaultPath))
+        {
+          System.Windows.MessageBox.Show(this, $"Default applications file not found:\n{defaultPath}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          return;
+        }
+
+        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{defaultPath}\"") { UseShellExecute = true });
+      }
+      catch (Exception ex)
+      {
+        System.Windows.MessageBox.Show(this, $"Unable to open default file in Explorer:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+      }
     }
 
     private void txtJson_TextChanged(object sender, EventArgs e)

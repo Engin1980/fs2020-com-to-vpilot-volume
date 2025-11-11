@@ -1,4 +1,4 @@
-﻿using eng.com2vPilotVolume.Types;
+﻿using Eng.Com2vPilotVolume.Types;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace eng.com2vPilotVolume.Services
+namespace Eng.Com2vPilotVolume.Services
 {
   public class SoundService(SoundsConfig settings) : BaseService
   {

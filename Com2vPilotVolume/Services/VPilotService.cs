@@ -1,4 +1,4 @@
-﻿using eng.com2vPilotVolume.Types;
+﻿using Eng.Com2vPilotVolume.Types;
 using Eng.WinCoreAudioApiLib;
 using ESystem;
 using ESystem.Logging;
@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Animation;
 
-namespace eng.com2vPilotVolume.Services
+namespace Eng.Com2vPilotVolume.Services
 {
   public class VPilotService : BaseService
   {

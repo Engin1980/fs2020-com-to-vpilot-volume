@@ -1,4 +1,4 @@
-﻿using eng.com2vPilotVolume.Types;
+﻿using Eng.Com2vPilotVolume.Types;
 using ESystem.Asserting;
 using ESystem.WPF.KeyHooking;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace eng.com2vPilotVolume.Services
+namespace Eng.Com2vPilotVolume.Services
 {
   public class KeyHookService : BaseService
   {

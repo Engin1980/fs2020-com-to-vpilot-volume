@@ -1,5 +1,4 @@
-﻿using Com2vPilotVolume;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +6,7 @@ using System.Printing;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace eng.com2vPilotVolume.Types
+namespace Eng.Com2vPilotVolume.Types
 {
   internal static class SettingsProvider
   {
