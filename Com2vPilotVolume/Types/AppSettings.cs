@@ -56,8 +56,6 @@ namespace eng.com2vPilotVolume.Types
   public class MainWindowConfig
   {
     public int[] StartupWindowSize { get; set; } = Array.Empty<int>();
-    public bool ShowSimpleAdjustButtons { get; set; }
-    public bool ShowDebugButtons { get; set; }
   }
 
   public class KeyboardMappingEntry

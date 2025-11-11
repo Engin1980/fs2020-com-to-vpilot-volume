@@ -29,6 +29,7 @@ namespace eng.com2vPilotVolume.Services
 
     private void InitHooks()
     {
+      logger.Info("Analysing key shortcuts...");
       keyHookActions.Clear();
       foreach (var entry in settings)
       {
@@ -62,8 +63,8 @@ namespace eng.com2vPilotVolume.Services
       logger.Debug($"Decoding key block from string '{keys}'");
       try
       {
-        ret = KeyChord.Serializer.Parse(keys);
-        logger.Debug($"Decoded key chord: {ret}");
+        ret = KeyShortcut.Parse(keys);
+        logger.Debug($"Decoded key shortcut: {ret}");
       }
       catch (Exception)
       {
@@ -73,8 +74,8 @@ namespace eng.com2vPilotVolume.Services
       {
         try
         {
-          ret = KeyShortcut.Serializer.Parse(keys);
-          logger.Debug($"Decoded key shortcut: {ret}");
+          ret = KeyChord.Parse(keys);
+          logger.Debug($"Decoded key chord: {ret}");
         }
         catch (Exception)
         {

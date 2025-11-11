@@ -18,6 +18,7 @@
     <wpfc:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
   </Window.Resources>
   <Grid>
+
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -87,7 +88,7 @@
       </GroupBox>
     </Grid>
 
-    <GroupBox Header="Direct Volume Adjust:" Grid.Row="1">
+    <GroupBox Grid.Row="1" Header="Direct Volume Adjust:" >
       <DockPanel>
         <Button DockPanel.Dock="Right" x:Name="btnInputSet" Content="(SET)" Click="btnInputSet_Click" />
         <TextBox DockPanel.Dock="Right" x:Name="txtInput" Width="55" Padding="0 4 0 0" Text="{Binding CustomVolume, StringFormat={}{0:N2}}" />
@@ -95,9 +96,17 @@
       </DockPanel>
     </GroupBox>
 
-
     <DockPanel Grid.Row="3">
       <TextBox x:Name="txtOut" MinLines="5" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" />
     </DockPanel>
+
+    <Button x:Name="btnOpenSettingsEditor" 
+            Content="🔧" 
+            Click="btnOpenSettingsEditor_Click" 
+            Margin="8 0 0 8" 
+            Padding="8"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Panel.ZIndex="999" />
   </Grid>
 </Window>

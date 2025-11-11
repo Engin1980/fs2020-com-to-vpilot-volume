@@ -27,11 +27,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -57,11 +59,17 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="appsettings.schema.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="icon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="icon.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Json.xshd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Sounds\change.mp3">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -82,6 +90,7 @@
 
   <ItemGroup>
     <Folder Include="Modules\" />
+    <Folder Include="Resources\" />
     <Folder Include="Sounds\" />
   </ItemGroup>
 

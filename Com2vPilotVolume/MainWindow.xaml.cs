@@ -1,4 +1,5 @@
-﻿using eng.com2vPilotVolume.Services;
+﻿using eng.com2vPilotVolume;
+using eng.com2vPilotVolume.Services;
 using eng.com2vPilotVolume.Types;
 using Eng.WinCoreAudioApiLib;
 using ESystem.Asserting;
@@ -29,7 +30,6 @@ namespace Com2vPilotVolume
   /// </summary>
   public partial class MainWindow : Window
   {
-    public record Settings(int[] StartupWindowSize, bool ShowSimpleAdjustButtons, bool ShowDebugButtons);
     public record Services(SimConService SimConService, VPilotService VPilotService, KeyHookService KeyHookService, SoundService SoundService);
 
     #region Public Classes
@@ -48,12 +48,6 @@ namespace Com2vPilotVolume
         set { base.UpdateProperty(nameof(CustomVolume), value); }
       }
 
-      public bool ShowSimpleAdjustButtons
-      {
-        get => base.GetProperty<bool>(nameof(ShowSimpleAdjustButtons))!;
-        set => base.UpdateProperty(nameof(ShowSimpleAdjustButtons), value);
-      }
-
       #endregion Public Properties
 
       #region Public Constructors
@@ -65,7 +59,6 @@ namespace Com2vPilotVolume
 
         this.SimConState = simConState;
         this.VPilotState = vpilotState;
-        this.ShowSimpleAdjustButtons = false;
       }
 
       #endregion Public Constructors
@@ -95,19 +88,30 @@ namespace Com2vPilotVolume
 
     public MainWindow()
     {
-      InitializeComponent();      
+      InitializeComponent();
 
       this.Title = $"FS2020 Com->VPilot Volume (ver. {Assembly.GetExecutingAssembly().GetName().Version})";
 
+      SettingsProvider.LoadAppSettings(out List<string> errors);
+
       // log init
-      this.logger = Logger.Create(this, "MainWindow", false);
+      this.logger = Logger.Create(this, "Main", false);
       InitLog();
+      LogServiceProviderErrors(errors);
+
+      // simconnect.dll existence check
+      if (System.IO.File.Exists("simconnect.dll") == false)
+      {
+        this.logger.Log(LogLevel.ERROR, "SimConnect.dll not found in application folder.");
+        this.logger.Log(LogLevel.ERROR, "Application start-up aborted.");
+        this.isInitialized = false;
+        return;
+      }
 
       // app init
       MainWindowConfig sett;
       try
       {
-        var cfg = App.Configuration;
         sett = App.AppSettings.MainWindow;
       }
       catch (Exception ex)
@@ -129,7 +133,8 @@ namespace Com2vPilotVolume
           new KeyHookService(App.AppSettings.KeyboardMappings),
           new SoundService(App.AppSettings.Sounds)
           );
-      } catch (Exception ex)
+      }
+      catch (Exception ex)
       {
         this.logger.Log(LogLevel.ERROR, "Failed to initialize services.");
         this.logger.Log(LogLevel.ERROR, ex.ToString());
@@ -158,13 +163,19 @@ namespace Com2vPilotVolume
       this.Height = sett.StartupWindowSize[1];
 
       this.Model = new ViewModel(
-        this.services.SimConService.State, 
-        this.services.VPilotService.State)
-      {
-        ShowSimpleAdjustButtons = sett.ShowSimpleAdjustButtons
-      };
+        this.services.SimConService.State,
+        this.services.VPilotService.State);
       this.DataContext = this.Model;
       this.isInitialized = true;
+    }
+
+    private void LogServiceProviderErrors(List<string> errors)
+    {
+      ESystem.Logging.Logger logger = ESystem.Logging.Logger.Create("SettingsProvider");
+      foreach (var error in errors)
+      {
+        logger.Log(ESystem.Logging.LogLevel.ERROR, error);
+      }
     }
 
     private NotifyIcon CreateNotifyIcon()
@@ -326,6 +337,12 @@ namespace Com2vPilotVolume
     {
       if (this.notifyIcon != null)
         this.notifyIcon.Visible = this.Visibility != Visibility.Visible;
+    }
+
+    private void btnOpenSettingsEditor_Click(object sender, RoutedEventArgs e)
+    {
+      SettingsEditor frm = new SettingsEditor();
+      frm.ShowDialog();
     }
 
     private void btnInputSet_Click(object sender, RoutedEventArgs e)

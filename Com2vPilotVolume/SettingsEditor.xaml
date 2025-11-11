@@ -1,0 +1,56 @@
+﻿<Window x:Class="eng.com2vPilotVolume.SettingsEditor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:eng.com2vPilotVolume"
+        xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        mc:Ignorable="d"
+        Title="Settings Editor" Height="650" Width="900"
+        Style="{StaticResource WinAll}">
+  <DockPanel>
+    <DockPanel DockPanel.Dock="Top">
+      <GroupBox DockPanel.Dock="Right" Header="File operations">
+        <StackPanel Orientation="Horizontal">
+          <Button x:Name="btnReload" Margin="4" Padding="4" Content="_Reload" Click="btnReload_Click" />
+          <Button x:Name="btnDiscard" Margin="4" Padding="4" Content="_Close without changes" Click="btnDiscard_Click" />
+          <Button x:Name="btnSave" Margin="4" Padding="4" Content="_Save &amp; Close" Click="btnSave_Click" />
+        </StackPanel>
+      </GroupBox>
+      <GroupBox Header="Epxlorer operations:">
+        <StackPanel Orientation="Horizontal">
+          <Button x:Name="btnSchema" Margin="4" Padding="4" Content="View s_chema" Click="btnSchema_Click" />
+          <Button x:Name="btnDefaultFile" Margin="4" Padding="4" Content="View _defaults" Click="btnDefaultFile_Click" />
+          <Button x:Name="btnUserFile" Margin="4" Padding="4" Content="View _file" Click="btnUserFile_Click" />
+          <Button x:Name="btnDescription" Margin="4" Padding="4" Content="View _description" Click="btnDescription_Click" />
+        </StackPanel>
+      </GroupBox>
+    </DockPanel>
+    <DockPanel DockPanel.Dock="Bottom">
+      <ListView x:Name="lvwErrors" 
+                Height="200"
+                ItemsSource="{Binding Errors, RelativeSource={RelativeSource AncestorType={x:Type local:SettingsEditor}}}">
+        <ListView.ItemTemplate>
+          <DataTemplate>
+            <StackPanel Orientation="Vertical">
+              <TextBlock Text="{Binding Message}" FontWeight="Bold" Foreground="Red" TextWrapping="Wrap"/>
+              <TextBlock Text="{Binding Location}" Margin="8" TextWrapping="Wrap"/>
+              <Separator Margin="30,4" Background="Gray" Height="1"/>
+            </StackPanel>
+
+          </DataTemplate>
+        </ListView.ItemTemplate>
+      </ListView>
+    </DockPanel>
+    <avalonedit:TextEditor x:Name="txtJson"
+      VerticalScrollBarVisibility="Visible"
+      HorizontalScrollBarVisibility="Visible"
+      TextChanged="txtJson_TextChanged"      
+      ShowLineNumbers="True"
+      FontFamily="Consolas"
+      FontSize="14"
+      SyntaxHighlighting="C#"
+      Padding="10" 
+                           />
+  </DockPanel>
+</Window>

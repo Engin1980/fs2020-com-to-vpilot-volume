@@ -90,9 +90,8 @@ namespace eng.com2vPilotVolume.Services
     {
       await Task.Run(() =>
       {
-        connectionTimer.Enabled = true;
         this.SetVolume(new Volume(1));
-        this.readVolumeTimer.Enabled = true;
+        connectionTimer.Enabled = true;
       });
     }
 

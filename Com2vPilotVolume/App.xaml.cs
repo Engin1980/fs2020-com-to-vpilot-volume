@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Configuration;
 using System.Data;
+using System.IO;
 using System.Windows;
 
 namespace Com2vPilotVolume;
@@ -13,39 +14,39 @@ namespace Com2vPilotVolume;
 /// </summary>
 public partial class App : System.Windows.Application
 {
-  public static IConfiguration Configuration { get; private set; } = null!;
-  internal static AppSettings AppSettings { get; private set; } = new AppSettings();
+  internal static AppSettings AppSettings { get; set; } = new AppSettings();
+  internal static IConfigurationRoot Configuration { get; set; } = null!;
 
   protected override void OnStartup(StartupEventArgs e)
   {
     base.OnStartup(e);
-
-    InitConfig();
   }
 
-  private void InitConfig()
-  {
-    var cb = new ConfigurationBuilder();
-    cb.AddJsonFile("appsettings.json", false);
-    App.Configuration = cb.Build();
-    AppSettings = App.Configuration.Get<AppSettings>() ?? new AppSettings();
-    EnsureSettingsSanity();
-  }
+  //private void InitConfig()
+  //{
+  //  EnsureLocalConfigExists();
 
-  private void EnsureSettingsSanity()
-  {
-    try
-    {
-      var tmp = AppSettings.KeyboardMappings
-        .Where(q => q.Adjust == null || q.Set == null)
-        .ToList();
-      if (tmp.Any())
-        throw new ApplicationException("Every keyboard mapping entry must have at least one of 'Set' or 'Adjust' defined.");
-    }
-    catch (Exception ex)
-    {
-      System.Windows.MessageBox.Show($"Error in configuration: {ex.Message}", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Error);
-      Environment.Exit(1);
-    }
-  }
+  //  var cb = new ConfigurationBuilder();
+  //  cb.AddJsonFile("appsettings.json", false);
+  //  var configuration = cb.Build();
+  //  AppSettings = configuration.Get<AppSettings>() ?? new AppSettings();
+  //  //EnsureSettingsSanity(); //TODO remove if not used
+  //}
+
+  //private static string UserConfigFilePath => Path.Combine(
+  //  Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+  //  "Com2VPilotVolume",
+  //  "appsettings.json");
+
+  //public static void EnsureLocalConfigExists()
+  //{
+  //  if (File.Exists(UserConfigFilePath) == false)
+  //  {
+  //    Directory.CreateDirectory(Path.GetDirectoryName(UserConfigFilePath)!);
+  //    File.Copy("appsettings.json", UserConfigFilePath);
+  //  }
+
+  //  Directory.CreateDirectory(folder);
+  //  string configPath = Path.Combine(folder, "config.json");
+  //}
 }
