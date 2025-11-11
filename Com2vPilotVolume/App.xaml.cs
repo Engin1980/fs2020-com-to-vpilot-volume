@@ -21,32 +21,4 @@ public partial class App : System.Windows.Application
   {
     base.OnStartup(e);
   }
-
-  //private void InitConfig()
-  //{
-  //  EnsureLocalConfigExists();
-
-  //  var cb = new ConfigurationBuilder();
-  //  cb.AddJsonFile("appsettings.json", false);
-  //  var configuration = cb.Build();
-  //  AppSettings = configuration.Get<AppSettings>() ?? new AppSettings();
-  //  //EnsureSettingsSanity(); //TODO remove if not used
-  //}
-
-  //private static string UserConfigFilePath => Path.Combine(
-  //  Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-  //  "Com2VPilotVolume",
-  //  "appsettings.json");
-
-  //public static void EnsureLocalConfigExists()
-  //{
-  //  if (File.Exists(UserConfigFilePath) == false)
-  //  {
-  //    Directory.CreateDirectory(Path.GetDirectoryName(UserConfigFilePath)!);
-  //    File.Copy("appsettings.json", UserConfigFilePath);
-  //  }
-
-  //  Directory.CreateDirectory(folder);
-  //  string configPath = Path.Combine(folder, "config.json");
-  //}
 }

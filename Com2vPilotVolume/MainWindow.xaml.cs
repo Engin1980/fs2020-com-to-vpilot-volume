@@ -158,6 +158,7 @@ namespace Eng.Com2vPilotVolume
       this.services.SimConService.VolumeUpdateCallback += appSimCon_VolumeUpdateCallback;
       this.services.SimConService.ActiveComChangedCallback += appSimCon_ActiveComChangedCallback;
       this.services.SimConService.FrequencyChangedCallback += appSimCon_FrequencyChangedCallback;
+      this.services.KeyHookService.VolumeChangeRequested += keyHookService_VolumeChangeRequested;
 
       this.Width = sett.StartupWindowSize[0];
       this.Height = sett.StartupWindowSize[1];
@@ -167,6 +168,20 @@ namespace Eng.Com2vPilotVolume
         this.services.VPilotService.State);
       this.DataContext = this.Model;
       this.isInitialized = true;
+    }
+
+    private void keyHookService_VolumeChangeRequested(double changeAmount, bool isRelative)
+    {
+      if (isRelative == false)
+      {
+        changeAmount = Math.Max(Math.Min(100, changeAmount), 0);
+        Volume winVolume = volumeMapper.Map(changeAmount);
+        this.services.VPilotService.SetVolume(winVolume);
+        if (winVolume == 1)
+          this.services.SoundService.PlayVolumeMax();
+        else if (winVolume == 0)
+          this.services.SoundService.PlayVolumeMin();
+      }
     }
 
     private void LogServiceProviderErrors(List<string> errors)
