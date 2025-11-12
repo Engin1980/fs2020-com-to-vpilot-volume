@@ -27,6 +27,17 @@ jobs:
         uses: KageKirin/get-csproj-version@v0
         with:
           file: Com2vPilotVolume/Com2vPilotVolume.csproj
+          xpath: //PropertyGroup/Version
+          regex: ^(?<major>[0-9]+)\.(?<minor>[0-9]+)\.(?<patch>[0-9]+)(\.[0-9]+)?$
+
+      # --- Zkrácení verze na major.minor.patch ---
+      - name: Normalize version
+        id: normalize_version
+        run: |
+          $fullVersion = "${{ steps.get_version.outputs.version }}"
+          $shortVersion = ($fullVersion -split '\.')[0..2] -join '.'
+          echo "short_version=$shortVersion" >> $env:GITHUB_OUTPUT
+        shell: pwsh
 
       - name: Restore dependencies
         run: dotnet restore Com2vPilotVolume/Com2vPilotVolume.csproj
@@ -43,23 +54,35 @@ jobs:
       - name: Prepare ZIP
         run: |
           cd out
-          Compress-Archive -Path * -DestinationPath ../Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
+          Compress-Archive -Path * -DestinationPath ../Com2vPilotVolume-${{ steps.normalize_version.outputs.short_version }}.zip
         shell: powershell
+
+      # --- Vytvoření git tagu (pokud neexistuje) ---
+      - name: Create git tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git fetch --tags
+          if (-not (git tag -l "v${{ steps.normalize_version.outputs.short_version }}")) {
+            git tag "v${{ steps.normalize_version.outputs.short_version }}"
+            git push origin "v${{ steps.normalize_version.outputs.short_version }}"
+          }
+        shell: pwsh
 
       # --- GitHub Release ---
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          release_name: v${{ steps.get_version.outputs.version }}
+          tag_name: v${{ steps.normalize_version.outputs.short_version }}
+          release_name: v${{ steps.normalize_version.outputs.short_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload ZIP to Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          assets: Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
+          tag_name: v${{ steps.normalize_version.outputs.short_version }}
+          assets: Com2vPilotVolume-${{ steps.normalize_version.outputs.short_version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
