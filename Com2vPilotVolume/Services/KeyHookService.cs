@@ -91,24 +91,22 @@ namespace Eng.Com2vPilotVolume.Services
       return ret;
     }
 
-    protected async override Task StartInternalAsync()
+    protected override Task StartInternalAsync()
     {
-      Task t = Task.Run(() =>
-      {
-        InitHooks();
+      InitHooks();
 
-        foreach (var kha in keyHookActions)
-        {
-          logger.Info($"Registering key hook for '{kha.Entry.Keys}'");
-          if (kha.KeyBlock is KeyChord kc)
-            keyHook.RegisterKeyChord(kc, kha.Action);
-          else if (kha.KeyBlock is KeyShortcut ks)
-            keyHook.RegisterKeyShortcut(ks, kha.Action);
-          else
-            throw new NotImplementedException("Unknown key block type registered in key hook.");
-        }
-      });
-      await t;
+      foreach (var kha in keyHookActions)
+      {
+        logger.Info($"Registering key hook for '{kha.Entry.Keys}'");
+        if (kha.KeyBlock is KeyChord kc)
+          keyHook.RegisterKeyChord(kc, kha.Action);
+        else if (kha.KeyBlock is KeyShortcut ks)
+          keyHook.RegisterKeyShortcut(ks, kha.Action);
+        else
+          throw new NotImplementedException("Unknown key block type registered in key hook.");
+      }
+
+      return Task.CompletedTask;
     }
 
     protected async override Task StopInternalAsync()

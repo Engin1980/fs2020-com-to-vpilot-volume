@@ -5,6 +5,7 @@ using Eng.WinCoreAudioApiLib;
 using ESystem.Asserting;
 using ESystem.Logging;
 using ESystem.Miscelaneous;
+using ESystem.WPF.KeyHooking;
 using Microsoft.Extensions.Configuration;
 using System.CodeDom;
 using System.ComponentModel;
@@ -41,11 +42,10 @@ namespace Eng.Com2vPilotVolume
       public SimConService.StateViewModel SimConState { get; private set; }
       public VPilotService.StateViewModel VPilotState { get; private set; }
 
-
-      public double CustomVolume
+      public double GuiVolume
       {
-        get { return base.GetProperty<double>(nameof(CustomVolume))!; }
-        set { base.UpdateProperty(nameof(CustomVolume), value); }
+        get { return base.GetProperty<double>(nameof(GuiVolume))!; }
+        set { base.UpdateProperty(nameof(GuiVolume), value); }
       }
 
       #endregion Public Properties
@@ -73,7 +73,7 @@ namespace Eng.Com2vPilotVolume
     private readonly Logger logger = null!;
     private double lastActiveComFrequency = 0;
     private int lastActiveComIndex = 1;
-    private bool isInitialized = false;
+    private readonly bool isInitialized = false;
     private readonly NotifyIcon? notifyIcon = null;
 
     #endregion Private Fields
@@ -168,20 +168,28 @@ namespace Eng.Com2vPilotVolume
         this.services.VPilotService.State);
       this.DataContext = this.Model;
       this.isInitialized = true;
+
+      this.Model.GuiVolume = 100;
     }
 
     private void keyHookService_VolumeChangeRequested(double changeAmount, bool isRelative)
     {
       if (isRelative == false)
-      {
         changeAmount = Math.Max(Math.Min(100, changeAmount), 0);
-        Volume winVolume = volumeMapper.Map(changeAmount);
-        this.services.VPilotService.SetVolume(winVolume);
-        if (winVolume == 1)
-          this.services.SoundService.PlayVolumeMax();
-        else if (winVolume == 0)
-          this.services.SoundService.PlayVolumeMin();
-      }
+      else
+        changeAmount = this.Model.GuiVolume * 100 + changeAmount;
+      SetVolume(new Volume(changeAmount / 100));
+    }
+
+    private void SetVolume(Volume volume)
+    {
+      this.Model.GuiVolume = (double)volume * 100;
+      Volume winVolume = volumeMapper.Map(volume);
+      this.services.VPilotService.SetVolume(winVolume);
+      if (winVolume == 1)
+        this.services.SoundService.PlayVolumeMax();
+      else if (winVolume == 0)
+        this.services.SoundService.PlayVolumeMin();
     }
 
     private void LogServiceProviderErrors(List<string> errors)
@@ -230,13 +238,7 @@ namespace Eng.Com2vPilotVolume
 
     private void appSimCon_VolumeUpdateCallback(Volume simVolume)
     {
-      Volume winVolume = volumeMapper.Map(simVolume);
-
-      this.services.VPilotService.SetVolume(winVolume);
-      if (winVolume == 1)
-        this.services.SoundService.PlayVolumeMax();
-      else if (winVolume == 0)
-        this.services.SoundService.PlayVolumeMin();
+      SetVolume(simVolume);
     }
 
     #endregion Public Constructors
@@ -362,7 +364,13 @@ namespace Eng.Com2vPilotVolume
 
     private void btnInputSet_Click(object sender, RoutedEventArgs e)
     {
-      double v = this.Model.CustomVolume / 100d;
+      if (double.TryParse(txtInput.Text, out double newVolume) == false)
+      {
+        System.Windows.MessageBox.Show("Invalid volume value.");
+        return;
+      }
+      double v = newVolume / 100d;
+      this.Model.GuiVolume = v;
       this.appSimCon_VolumeUpdateCallback(v);
     }
 

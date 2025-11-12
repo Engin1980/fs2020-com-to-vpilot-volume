@@ -146,7 +146,7 @@ namespace Eng.Com2vPilotVolume
 
     private void btnDescription_Click(object sender, RoutedEventArgs e)
     {
-      const string url = "https://github.com/Engin1980/VPilotNotifications/wiki/Configuration-description-%E2%80%90-AppSettings.json";
+      const string url = "https://github.com/Engin1980/fs2020-com-to-vpilot-volume/wiki/Configuration-File";
 
       try
       {

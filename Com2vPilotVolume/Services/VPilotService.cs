@@ -32,7 +32,6 @@ namespace Eng.Com2vPilotVolume.Services
         set => base.UpdateProperty(nameof(Volume), value);
       }
 
-
       public Process? VPilotProcess
       {
         get => base.GetProperty<Process?>(nameof(VPilotProcess));

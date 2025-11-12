@@ -91,8 +91,8 @@
     <GroupBox Grid.Row="1" Header="Direct Volume Adjust:" >
       <DockPanel>
         <Button DockPanel.Dock="Right" x:Name="btnInputSet" Content="(SET)" Click="btnInputSet_Click" />
-        <TextBox DockPanel.Dock="Right" x:Name="txtInput" Width="55" Padding="0 4 0 0" Text="{Binding CustomVolume, StringFormat={}{0:N2}}" />
-        <Slider Minimum="0" Maximum="100" Margin="4 4 4 0" Value="{Binding CustomVolume}" />
+        <TextBox DockPanel.Dock="Right" x:Name="txtInput" Width="55" Padding="0 4 0 0" Text="{Binding GuiVolume, StringFormat={}{0:N2}}" />
+        <Slider Minimum="0" Maximum="100" Margin="4 4 4 0" Value="{Binding GuiVolume}" />
       </DockPanel>
     </GroupBox>
 
