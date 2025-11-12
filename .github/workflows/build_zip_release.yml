@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
@@ -67,7 +67,7 @@ jobs:
 
       # --- GitHub Pages Deploy ---
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v5
+        uses: peaceiris/actions-gh-pages@v5.1.22
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./out
