@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using System.CodeDom;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -177,7 +178,7 @@ namespace Eng.Com2vPilotVolume
       if (isRelative == false)
         changeAmount = Math.Max(Math.Min(100, changeAmount), 0);
       else
-        changeAmount = this.Model.GuiVolume * 100 + changeAmount;
+        changeAmount = this.Model.GuiVolume + changeAmount;
       SetVolume(new Volume(changeAmount / 100));
     }
 
@@ -362,9 +363,10 @@ namespace Eng.Com2vPilotVolume
       frm.ShowDialog();
     }
 
+    private static CultureInfo enUS = CultureInfo.GetCultureInfo("en-US");
     private void btnInputSet_Click(object sender, RoutedEventArgs e)
     {
-      if (double.TryParse(txtInput.Text, out double newVolume) == false)
+      if (double.TryParse(txtInput.Text, enUS, out double newVolume) == false)
       {
         System.Windows.MessageBox.Show("Invalid volume value.");
         return;
