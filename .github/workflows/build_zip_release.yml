@@ -1,64 +1,65 @@
-name: .NET Core 6 Desktop
+name: Release build
 
 on:
   push:
-    branches: [ "release" ]
-  pull_request:
-    branches: [ "release" ]
+    branches:
+      - release
 
 permissions:
-  contents: write
+  contents: write  # nutné pro vytváření release a upload assetů
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        configuration: [Debug, Release]
-
-    runs-on: windows-latest  # For a list of available runner types, refer to
-                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
-
-    env:
-      Solution_Name: Com2vPilotVolumeSolution.sln               # Replace with your solution name, i.e. MyWpfApp.sln.
-      Wap_Project_Directory: your-wap-project-directory-name    # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
-      Wap_Project_Path: your-wap-project-path                   # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
+  build-and-release:
+    runs-on: windows-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # Install the .NET Core workload
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 6.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Restore dependencies I
-      run: dotnet restore WinCoreAudioApiLib/WinCoreAudioApiLib.csproj
+      - name: Get version from csproj
+        id: get_version
+        uses: KageKirin/get-csproj-version@v0
+        with:
+          file: Com2vPilotVolume/Com2vPilotVolume.csproj
 
-    - name: Restore dependencies II
-      run: dotnet restore Com2vPilotVolume/Com2vPilotVolume.csproj
+      - name: Show version
+        run: echo "Version = ${{ steps.get_version.outputs.version }}"
 
-    - name: Build app
-      run: dotnet publish Com2vPilotVolume/Com2vPilotVolume.csproj -c Release -o output
+      - name: Restore dependencies
+        run: dotnet restore Com2vPilotVolume/Com2vPilotVolume.csproj
 
-    - name: Copy README.md to output
-      run: copy README.md output\README.md
+      - name: Build and publish
+        run: |
+          dotnet publish Com2vPilotVolume/Com2vPilotVolume.csproj -c Release -o out
 
-    - name: Copy License to output
-      run: copy LICENSE output\LICENSE      
+      - name: Copy DLLs folder
+        run: |
+          xcopy /E /Y DLLs\* out\DLLs\
+          xcopy /Y DLLs\SimConnect.dll out\
 
-    - name: Zip build output
-      run: powershell Compress-Archive -Path output\* -DestinationPath build.zip
+      - name: Prepare ZIP
+        run: |
+          cd out
+          Compress-Archive -Path * -DestinationPath ../Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
+        shell: powershell
 
-    - name: Upload to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./
-        publish_branch: gh-pages
-        destination_dir: preview-build
-        keep_files: true
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          release_name: v${{ steps.get_version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload ZIP to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          assets: Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
