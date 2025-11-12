@@ -1,0 +1,516 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ESimConnect</name>
+    </assembly>
+    <members>
+        <member name="T:ESimConnect.Definitions.SimDeprecatedAttribute">
+            <summary>
+            Used to defined sim-definitions (events/simvars) that are deprecated in FS2020.
+            </summary>
+        </member>
+        <member name="T:ESimConnect.Definitions.SimWritableAttribute">
+            <summary>
+            Mark SimVar as writable in FS2020.
+            </summary>
+            <remarks>
+            Writable SimVars may write a value into the sim.
+            </remarks>
+        </member>
+        <member name="T:ESimConnect.SimConnectException">
+            <summary>
+            Exceptions returned from MS.SimConnect. Taken from ms.simconnect documentation.
+            </summary>
+        </member>
+        <member name="T:ESimConnect.SimConnectSimTypeName">
+            <summary>
+             SimVar returned types from ms.simConnect. Taken from documentation.
+             </summary>
+        </member>
+        <member name="T:ESimConnect.SimConnectSimObjectType">
+            <summary>
+            SimVar SimObject type from ms.simConnect. Taken from documentation.
+            </summary>
+        </member>
+        <member name="T:ESimConnect.SimConnectPeriod">
+            <summary>
+            SimVar Period returned from ms.simConnect. Taken from documentation.
+            </summary>
+        </member>
+        <member name="F:ESimConnect.SimConnectPeriod.VISUAL_FRAME">
+            <summary>
+            Invoke once
+            </summary>
+            <remarks>
+            This also causes the type/request is unregistered from repeating read-outs, causing SimConnect exceptions "ID UNRECOGNIZED".
+            Therefore, users should use simple data request function instead of repetition-requests with ONCE parameter.
+            Therefore, commented.
+            </remarks>
+            ONCE,
+        </member>
+        <member name="T:ESimConnect.ESimConnect">
+            <summary>
+            Wrapper for Ms.Simconnect object.
+            </summary>
+        </member>
+        <member name="T:ESimConnect.ESimConnect.StructsHandler">
+            <summary>
+            Offers operations over structs.
+            </summary>
+        </member>
+        <member name="F:ESimConnect.ESimConnect.StructsHandler.DEFAULT_RADIUS">
+            <summary>
+            Default radius. As typical requests are related to the current user/plane, default value is 0.
+            </summary>
+        </member>
+        <member name="F:ESimConnect.ESimConnect.StructsHandler.DEFAULT_SIMOBJECT_TYPE">
+            <summary>
+            Default sim object type. As typical request are related to the current user/plane, default value is USER.
+            </summary>
+        </member>
+        <member name="M:ESimConnect.ESimConnect.StructsHandler.Register``1(System.Boolean)">
+            <summary>
+            Registers a type with fields to get values from FS.
+            </summary>
+            <typeparam name="T">Registerd type</typeparam>
+            <param name="validate">True if SimVar names should be validated.</param>
+            <returns>TypeId uniquely referring registered type.</returns>
+        </member>
+        <member name="M:ESimConnect.ESimConnect.StructsHandler.Request``1(System.UInt32,ESimConnect.SimConnectSimObjectType)">
+            <summary>
+            Requests a data w.r.t. the registered type
+            </summary>
+            <typeparam name="T">Target type, must be already registered with assigned TypeId.</typeparam>
+            <param name="radius">Radius of data request.</param>
+            <param name="simObjectType">SimObject related to the requested data.</param>
+            <returns>RequestId uniquely describing the request. Data are returned via event with the same RequestId.</returns>
+            <exception cref="T:ESimConnect.InternalException">If any issue occurs.</exception>
+        </member>
+        <member name="M:ESimConnect.ESimConnect.StructsHandler.Request(ESimConnect.TypeId,System.UInt32,ESimConnect.SimConnectSimObjectType)">
+            <summary>
+            Requests a data w.r.t. the registered type
+            </summary>
+            <param name="typeId">Previously registered TypeId</param>
+            <param name="radius">Radius of data request.</param>
+            <param name="simObjectType">SimObject realted to the requested data.</param>
+            <returns>RequestId uniquely describing the request. Data are returned via event with the same RequestId.</returns>
+            <exception cref="T:ESimConnect.InternalException">If any issue occurs.</exception>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs.Data">
+            <summary>
+            Returned data
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs.RequestId">
+            <summary>
+            Corresponding RequestId
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.ESimConnectDataReceivedEventArgs.Type">
+            <summary>
+            Type of data
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.ESimConnectSystemEventInvokedEventArgs.Event">
+            <summary>
+            Event name.
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.ESimConnectSystemEventInvokedEventArgs.EventId">
+            <summary>
+            Corresponding EventId
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.ESimConnectSystemEventInvokedEventArgs.Value">
+            <summary>
+            Value
+            </summary>
+        </member>
+        <member name="E:ESimConnect.ESimConnect.Connected">
+            <summary>
+            Invoked when connected.
+            </summary>
+        </member>
+        <member name="E:ESimConnect.ESimConnect.DataReceived">
+            <summary>
+            Invoked when data are received.
+            </summary>
+            <remarks>
+            Some requests must be registered first to receive some data.
+            </remarks>
+        </member>
+        <member name="E:ESimConnect.ESimConnect.Disconnected">
+            <summary>
+            Invoked when disconnected.
+            </summary>
+        </member>
+        <member name="E:ESimConnect.ESimConnect.SystemEventInvoked">
+            <summary>
+            Invoked when system event occured.
+            </summary>
+        </member>
+        <member name="E:ESimConnect.ESimConnect.ThrowsException">
+            <summary>
+            Invoked on any error received from SimConnect
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.Structs">
+            <summary>
+            Offers operations over structs.
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.SystemEvents">
+            <summary>
+            Offers operations over System (FS) Events.
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.Values">
+            <summary>
+            Offers operations over SimVars.
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.Strings">
+            <summary>
+            Offers operations over Strings.
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.ClientEvents">
+            <summary>
+            Offers operation onver Client Events.
+            </summary>
+        </member>
+        <member name="P:ESimConnect.ESimConnect.IsOpened">
+            <summary>
+            True if SimConnect is opened. False otherwise.
+            </summary>
+        </member>
+        <member name="M:ESimConnect.ESimConnect.#ctor">
+            <summary>
+            Creates a new instance.
+            </summary>
+        </member>
+        <member name="M:ESimConnect.ESimConnect.Close">
+            <summary>
+            Unregisters all definitions and close and dispose underlying simConnect object.
+            </summary>
+        </member>
+        <member name="M:ESimConnect.ESimConnect.Open">
+            <summary>
+            Opens underlying simConnect object.
+            </summary>
+        </member>
+        <member name="T:ESimConnect.Extenders.AbstractExtender">
+            <summary>
+            Abstract class for extenders.
+            </summary>
+        </member>
+        <member name="M:ESimConnect.Extenders.AbstractExtender.#ctor(ESimConnect.ESimConnect)">
+            <summary>
+            Creates a new instance.
+            </summary>
+            <param name="eSimConnect">ESimConnect instance, cannot be null.</param>
+        </member>
+        <member name="T:ESimConnect.Extenders.OpenInBackgroundExtender">
+            <summary>
+            Opens ESimConnect in background (in repeated attempts), invokes event once the opening is successfull.
+            </summary>
+        </member>
+        <member name="T:ESimConnect.Extenders.OpenInBackgroundExtender.OnOpenActionRepeatMode">
+            <summary>
+            Defines how the action is invoked when ESimConnect is opened.
+            </summary>
+        </member>
+        <member name="F:ESimConnect.Extenders.OpenInBackgroundExtender.OnOpenActionRepeatMode.FirstOnly">
+            <summary>
+            Specifies whether the action should be invoked only once when ESimConnect is opened/connected for the first time.
+            </summary>
+        </member>
+        <member name="F:ESimConnect.Extenders.OpenInBackgroundExtender.OnOpenActionRepeatMode.Always">
+            <summary>
+            Specifies whether the action should be invoked always when ESimConnect is opened/connected..
+            </summary>
+        </member>
+        <member name="E:ESimConnect.Extenders.OpenInBackgroundExtender.Opened">
+            <summary>
+            Invoked when ESimConnect is opened.
+            </summary>
+        </member>
+        <member name="E:ESimConnect.Extenders.OpenInBackgroundExtender.OpeningAttemptFailed">
+            <summary>
+            Invoked when one opening attempt did fail (will try to continue with other attempts.)
+            </summary>
+        </member>
+        <member name="P:ESimConnect.Extenders.OpenInBackgroundExtender.IsOpened">
+            <summary>
+            True if ESimConnect is opened.
+            </summary>
+        </member>
+        <member name="P:ESimConnect.Extenders.OpenInBackgroundExtender.IsOpening">
+            <summary>
+            True if ESimConnect opening in background is in the progress.
+            </summary>
+        </member>
+        <member name="M:ESimConnect.Extenders.OpenInBackgroundExtender.#ctor(ESimConnect.ESimConnect,System.Int32,System.Int32)">
+            <summary>
+            Creates a new instance
+            </summary>
+            <param name="eSimConnect">Underlying ESimConnect object</param>
+            <param name="initialDelayInMs">Initial delay before first opening attempt.</param>
+            <param name="repeatedAttemptDelayInMs">Delay after unsuccessful attempt.</param>
+        </member>
+        <member name="M:ESimConnect.Extenders.OpenInBackgroundExtender.InvokeWhenConnected(System.Action,ESimConnect.Extenders.OpenInBackgroundExtender.OnOpenActionRepeatMode)">
+            <summary>
+            Invokes the specified action when the connection is established, based on the specified repeat mode.
+            </summary>
+            <remarks>If the connection is already established when this method is called, the action is executed
+            immediately on a separate task. Otherwise, the action is queued to be executed based on the specified repeat
+            mode.</remarks>
+            <param name="action">The action to invoke when the connection is established. Cannot be <see langword="null"/>.</param>
+            <param name="mode">Specifies the repeat mode for the action. Use <see cref="F:ESimConnect.Extenders.OpenInBackgroundExtender.OnOpenActionRepeatMode.Always"/> to invoke the action
+            every time the connection is established,  or <see cref="F:ESimConnect.Extenders.OpenInBackgroundExtender.OnOpenActionRepeatMode.FirstOnly"/> to invoke the
+            action only the first time the connection is established.</param>
+        </member>
+        <member name="M:ESimConnect.Extenders.OpenInBackgroundExtender.OpenRepeatedlyUntilSuccess">
+            <summary>
+            Starts connecting in background. Non-blocking call. If ESimConnect is opened, then event is invoked.
+            </summary>
+        </member>
+        <member name="M:ESimConnect.Extenders.OpenInBackgroundExtender.OpenRepeatedlyUntilSuccess(System.Action,ESimConnect.Extenders.OpenInBackgroundExtender.OnOpenActionRepeatMode)">
+            <summary>
+            Starts connecting in background. Non-blocking call. If ESimConnect is opened, then event is invoked.
+            </summary>
+            <param name="onOpenedAction">Action to invoke when ESimConnect is opened.</param> -->
+            <param name="mode">Mode of invoking action when ESimConnect is opened.</param>
+        </member>
+        <member name="T:ESimConnect.Extenders.SimTimeExtender">
+            <summary>
+            Provides event and states for Sim-Second-Elapsed and Paused.
+            </summary>
+        </member>
+        <member name="P:ESimConnect.Extenders.SimTimeExtender.IsSimPaused">
+            <summary>
+            Returns True if sim is paused, false otherwise.
+            </summary>
+        </member>
+        <member name="E:ESimConnect.Extenders.SimTimeExtender.SimSecondElapsed">
+            <summary>
+            Invoked on every Sim Second Elapsed.
+            </summary>
+        </member>
+        <member name="E:ESimConnect.Extenders.SimTimeExtender.PauseChanged">
+            <summary>
+            Invoked on pause state change.
+            </summary>
+        </member>
+        <member name="M:ESimConnect.Extenders.SimTimeExtender.#ctor(ESimConnect.ESimConnect,System.Boolean)">
+            <summary>
+            Creates new instance
+            </summary>
+            <param name="eSimConnect">Underlying eSimConnect object.</param>
+            <param name="invokeSimSecondEventsOnPause">True if SimSecond should be invoked on pause, false otherwise.</param>
+        </member>
+        <member name="T:ESimConnect.Extenders.TypeCacheExtender">
+            <summary>
+            Extender to register all properties as SimVars in class and return its values on request.
+            </summary>
+            <remarks>
+            The point is to have a class with properties annotated with <see cref="T:ESimConnect.Extenders.SimPropertyAttribute"/>
+            For every property, this attribute defines its mapping to SimVar.
+            Once such type is registered, the call of <see cref="M:ESimConnect.Extenders.TypeCacheExtender.GetSnapshot``1">GetSnapshot()</see> will 
+            fill/return and instance with current SimVar data in properties. />
+            </remarks>
+        </member>
+        <member name="M:ESimConnect.Extenders.TypeCacheExtender.#ctor(ESimConnect.Extenders.ValueCacheExtender)">
+            <summary>
+            Creates a new instance
+            </summary>
+            <param name="cache">Underyling <see cref="T:ESimConnect.Extenders.ValueCacheExtender"/>.</param>
+        </member>
+        <member name="M:ESimConnect.Extenders.TypeCacheExtender.Register``1">
+            <summary>
+            Registers a class with <see cref="T:ESimConnect.Extenders.SimPropertyAttribute" /> annotated properties./>
+            </summary>
+            <typeparam name="T">Type to register.</typeparam>
+        </member>
+        <member name="M:ESimConnect.Extenders.TypeCacheExtender.Register(System.Type)">
+            <summary>
+            Registers a class with <see cref="T:ESimConnect.Extenders.SimPropertyAttribute" /> annotated properties./>
+            </summary>
+            <param name="type">Type to register.</param>
+        </member>
+        <member name="M:ESimConnect.Extenders.TypeCacheExtender.GetSnapshot``1">
+            <summary>
+            Returns current values in new instance of registered type.
+            </summary>
+            <typeparam name="T">Registered type.</typeparam>
+            <returns>Snapshot of SimVar values in properties in a new instance.</returns>
+            <exception cref="T:ESimConnect.Extenders.TypeCacheExtenderException">Thows exception if type is not registered.</exception>
+        </member>
+        <member name="M:ESimConnect.Extenders.TypeCacheExtender.FillSnapshot``1(``0)">
+            <summary>
+            Sets current values into existing instance of registered type.
+            </summary>
+            <typeparam name="T">Registered type.</typeparam>
+            <param name="snapshot">Instace of registerd type.</param>
+            <exception cref="T:ESimConnect.Extenders.TypeCacheExtenderException">Thows exception if type is not registered.</exception>
+        </member>
+        <member name="T:ESimConnect.Extenders.ValueCacheExtender">
+            <summary>
+            Caches the value of SimVar obtained from ESimConnect and obtain it every second. 
+            Provides the value on request.
+            </summary>
+        </member>
+        <member name="T:ESimConnect.Extenders.ValueCacheExtender.SimVarValue">
+            <summary>
+            Contains type definition info with their value.
+            </summary>
+            <param name="SimVarDefinition">Definition of SimVar.</param>
+            <param name="Value">Value of the </param>
+        </member>
+        <member name="M:ESimConnect.Extenders.ValueCacheExtender.SimVarValue.#ctor(ESimConnect.Extenders.ValueCacheExtender.SimVarDefinition,System.Double)">
+            <summary>
+            Contains type definition info with their value.
+            </summary>
+            <param name="SimVarDefinition">Definition of SimVar.</param>
+            <param name="Value">Value of the </param>
+        </member>
+        <member name="P:ESimConnect.Extenders.ValueCacheExtender.SimVarValue.SimVarDefinition">
+            <summary>Definition of SimVar.</summary>
+        </member>
+        <member name="P:ESimConnect.Extenders.ValueCacheExtender.SimVarValue.Value">
+            <summary>Value of the </summary>
+        </member>
+        <member name="T:ESimConnect.Extenders.ValueCacheExtender.SimVarDefinition">
+            <summary>
+            Contains SimVar definition.
+            </summary>
+            <param name="Name">SimVar name</param>
+            <param name="Unit">SimVar unit in which data are returned (like feet, knots, meters, ...)</param>
+            <param name="Type">DataType in which value is returned (like Int, Double, ...)</param>
+        </member>
+        <member name="M:ESimConnect.Extenders.ValueCacheExtender.SimVarDefinition.#ctor(System.String,System.String,ESimConnect.SimConnectSimTypeName)">
+            <summary>
+            Contains SimVar definition.
+            </summary>
+            <param name="Name">SimVar name</param>
+            <param name="Unit">SimVar unit in which data are returned (like feet, knots, meters, ...)</param>
+            <param name="Type">DataType in which value is returned (like Int, Double, ...)</param>
+        </member>
+        <member name="P:ESimConnect.Extenders.ValueCacheExtender.SimVarDefinition.Name">
+            <summary>SimVar name</summary>
+        </member>
+        <member name="P:ESimConnect.Extenders.ValueCacheExtender.SimVarDefinition.Unit">
+            <summary>SimVar unit in which data are returned (like feet, knots, meters, ...)</summary>
+        </member>
+        <member name="P:ESimConnect.Extenders.ValueCacheExtender.SimVarDefinition.Type">
+            <summary>DataType in which value is returned (like Int, Double, ...)</summary>
+        </member>
+        <member name="T:ESimConnect.Extenders.ValueCacheExtender.ValueChangeEventArgs">
+            <summary>
+            Contains TypeId with the current value.
+            </summary>
+            <param name="TypeId">TypeId</param>
+            <param name="Value">Current Value</param>
+        </member>
+        <member name="M:ESimConnect.Extenders.ValueCacheExtender.ValueChangeEventArgs.#ctor(ESimConnect.TypeId,System.Double)">
+            <summary>
+            Contains TypeId with the current value.
+            </summary>
+            <param name="TypeId">TypeId</param>
+            <param name="Value">Current Value</param>
+        </member>
+        <member name="P:ESimConnect.Extenders.ValueCacheExtender.ValueChangeEventArgs.TypeId">
+            <summary>TypeId</summary>
+        </member>
+        <member name="P:ESimConnect.Extenders.ValueCacheExtender.ValueChangeEventArgs.Value">
+            <summary>Current Value</summary>
+        </member>
+        <member name="T:ESimConnect.Extenders.ValueCacheExtender.NewRegistration">
+            <summary>
+            Contains simvar definition info.
+            </summary>
+            <param name="SimVarDefinition">SimVar definition</param>
+            <param name="TypeId">Corresponding TypeId</param>
+            <param name="IsRepeatedRegistration">True if this definition was already registered, false otherwise.</param>
+        </member>
+        <member name="M:ESimConnect.Extenders.ValueCacheExtender.NewRegistration.#ctor(ESimConnect.Extenders.ValueCacheExtender.SimVarDefinition,ESimConnect.TypeId,System.Boolean)">
+            <summary>
+            Contains simvar definition info.
+            </summary>
+            <param name="SimVarDefinition">SimVar definition</param>
+            <param name="TypeId">Corresponding TypeId</param>
+            <param name="IsRepeatedRegistration">True if this definition was already registered, false otherwise.</param>
+        </member>
+        <member name="P:ESimConnect.Extenders.ValueCacheExtender.NewRegistration.SimVarDefinition">
+            <summary>SimVar definition</summary>
+        </member>
+        <member name="P:ESimConnect.Extenders.ValueCacheExtender.NewRegistration.TypeId">
+            <summary>Corresponding TypeId</summary>
+        </member>
+        <member name="P:ESimConnect.Extenders.ValueCacheExtender.NewRegistration.IsRepeatedRegistration">
+            <summary>True if this definition was already registered, false otherwise.</summary>
+        </member>
+        <member name="F:ESimConnect.Extenders.ValueCacheExtender.DEFAULT_UNIT">
+            <summary>
+            Default SimVar unit.
+            </summary>
+        </member>
+        <member name="F:ESimConnect.Extenders.ValueCacheExtender.DEFAULT_TYPE">
+            <summary>
+            Defualt SimVar Type
+            </summary>
+        </member>
+        <member name="E:ESimConnect.Extenders.ValueCacheExtender.ValueChanged">
+            <summary>
+            Invoked when value of some registed SimVar was changed.
+            </summary>
+        </member>
+        <member name="E:ESimConnect.Extenders.ValueCacheExtender.TypeRegistered">
+            <summary>
+            Invoked when registration is done (even for already registed SimVar).
+            </summary>
+        </member>
+        <member name="M:ESimConnect.Extenders.ValueCacheExtender.#ctor(ESimConnect.ESimConnect,ESimConnect.SimConnectPeriod)">
+            <summary>
+            Creates a new instance.
+            </summary>
+            <param name="eSimCon">Underlying ESimConnect object</param>
+            <param name="period">Period at which values are updated. Second by default.</param>
+        </member>
+        <member name="M:ESimConnect.Extenders.ValueCacheExtender.Register(System.String,System.String,ESimConnect.SimConnectSimTypeName)">
+            <summary>
+            Registers new SimVar
+            </summary>
+            <param name="name">SimVar name</param>
+            <param name="unit">SimVar unit - like meters, feet, etc.</param>
+            <param name="type">Data type, like int, float, ...</param>
+            <returns>Unique TypeId. This Id is required to get the current value.</returns>
+        </member>
+        <member name="M:ESimConnect.Extenders.ValueCacheExtender.GetAllValues">
+            <summary>
+            Returns all values of all registered SimVars.
+            </summary>
+            <returns>SimVar infos + values in list.</returns>
+        </member>
+        <member name="M:ESimConnect.Extenders.ValueCacheExtender.GetValue(ESimConnect.TypeId)">
+            <summary>
+            Returns the current value of the SimVar based on its TypeId.
+            </summary>
+            <param name="typeId">TypeId defining the required SimVar.</param>
+            <returns>Current value of SimVars</returns>
+        </member>
+        <member name="F:ESimConnect.Extenders.VerticalSpeedExtender.DEFAULT_BUFFER_SIZE">
+            <summary>
+            Default buffer size for the data buffer.
+            </summary>
+            <remarks>
+            Greater value (20) caused that irrelevant border values were taken into account.
+            </remarks>
+        </member>
+        <member name="F:ESimConnect.Types.WinHandleManager.WM_USER_SIMCONNECT">
+            <summary>
+            Predefined windows handler id to recognize requests from Simconnect. For more see API docs.
+            </summary>
+        </member>
+    </members>
+</doc>
