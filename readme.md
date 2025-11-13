@@ -31,8 +31,7 @@ The newest release is available at the [Releases](https://github.com/Engin1980/f
 
 **Unzip Note**: If using Windows default extractor, you need to disable ZIP file blockage (on by default on Windows). On the ZIP file, in the context menu select `Properties` and on the right bottom part of the dialog select `Unblock`.
 
-[.NET 6.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) is required to run the application (commonly installed on Windows
-OS by default).
+[.NET 8.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) is required to run the application (commonly installed on Windows OS by default).
 
 ## Usage
 
@@ -49,6 +48,11 @@ The successful connection is indicated by changing the background (red) color (t
 For more info about principle, implementation or configuration see [Project Wiki](https://github.com/Engin1980/fs2020-com-to-vpilot-volume/wiki).
 
 ## Version history
+
+**v0.7.0 - 2025-11-13**
+* Added key hooks
+* Internally rewritten to new concept of services
+* Migrated to .NET 8
 
 **v0.4.1 - 2025-08-02**
 * Minimization into the System Tray icon.
