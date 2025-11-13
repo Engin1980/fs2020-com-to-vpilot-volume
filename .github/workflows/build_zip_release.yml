@@ -53,7 +53,6 @@ jobs:
 
       - name: Copy DLLs folder
         run: |
-          xcopy /E /Y DLLs\* out\DLLs\
           xcopy /Y DLLs\SimConnect.dll out\
 
       - name: Prepare ZIP
