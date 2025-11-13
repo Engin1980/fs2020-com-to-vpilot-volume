@@ -51,9 +51,11 @@ jobs:
         run: |
           dotnet publish Com2vPilotVolume/Com2vPilotVolume.csproj -c Release -o out
 
-      - name: Copy DLLs folder
+      - name: Copy DLLs folder + readme + license
         run: |
           xcopy /Y DLLs\SimConnect.dll out\
+          copy radme.md out/
+          copy LICENSE out/
 
       - name: Prepare ZIP
         run: |
