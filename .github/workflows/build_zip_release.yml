@@ -1,4 +1,4 @@
-name: Release build and deploy
+name: Release build
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - release
 
 permissions:
-  contents: write
+  contents: write  # nutné pro vytváření release a upload assetů
 
 jobs:
   build-and-release:
@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '8.0.x'
 
       - name: Get version from csproj
         id: get_version
@@ -44,25 +44,22 @@ jobs:
 
       - name: Prepare ZIP
         run: |
-          Compress-Archive -Path out\* -DestinationPath Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
+          cd out
+          Compress-Archive -Path * -DestinationPath ../Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
         shell: powershell
 
-      - name: Create or Update GitHub Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.get_version.outputs.version }}
-          name: v${{ steps.get_version.outputs.version }}
-          files: Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
-          draft: false
-          prerelease: false
-          overwrite: true
+          release_name: v${{ steps.get_version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v5
+      - name: Upload ZIP to Release
+        uses: softprops/action-gh-release@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
-          publish_branch: gh-pages
-          force_orphan: true
+          tag_name: v${{ steps.get_version.outputs.version }}
+          assets: Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
