@@ -54,7 +54,7 @@ jobs:
       - name: Copy DLLs folder + readme + license
         run: |
           xcopy /Y DLLs\SimConnect.dll out\
-          copy radme.md out/
+          copy readme.md out/
           copy LICENSE out/
 
       - name: Prepare ZIP
