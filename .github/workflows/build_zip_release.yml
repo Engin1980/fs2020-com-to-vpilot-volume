@@ -1,4 +1,4 @@
-name: Release build
+name: Release build and deploy
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - release
 
 permissions:
-  contents: write  # nutné pro vytváření release a upload assetů
+  contents: write  # nutné pro release a GitHub Pages deploy
 
 jobs:
   build-and-release:
@@ -19,13 +19,24 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '6.0.x'
 
       - name: Get version from csproj
         id: get_version
         uses: KageKirin/get-csproj-version@v0
         with:
           file: Com2vPilotVolume/Com2vPilotVolume.csproj
+          xpath: //PropertyGroup/Version
+          regex: ^(?<major>[0-9]+)\.(?<minor>[0-9]+)\.(?<patch>[0-9]+)(\.[0-9]+)?$
+      
+      # --- Zkrácení verze na major.minor.patch ---
+      - name: Normalize version
+        id: normalize_version
+        run: |
+          $fullVersion = "${{ steps.get_version.outputs.version }}"
+          $shortVersion = ($fullVersion -split '\.')[0..2] -join '.'
+          echo "short_version=$shortVersion" >> $env:GITHUB_OUTPUT
+        shell: pwsh
 
       - name: Show version
         run: echo "Version = ${{ steps.get_version.outputs.version }}"
@@ -48,6 +59,7 @@ jobs:
           Compress-Archive -Path * -DestinationPath ../Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
         shell: powershell
 
+      # --- GitHub Release ---
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -63,3 +75,12 @@ jobs:
           assets: Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- GitHub Pages Deploy ---
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
+          publish_branch: gh-pages
+          force_orphan: true
