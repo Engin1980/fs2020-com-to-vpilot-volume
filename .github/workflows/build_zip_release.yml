@@ -39,7 +39,7 @@ jobs:
         shell: pwsh
 
       - name: Show version
-        run: echo "Version = ${{ steps.get_version.outputs.version }}"
+        run: echo "Version = ${{ steps.get_version.outputs.short_version }}"
 
       - name: Restore dependencies
         run: dotnet restore Com2vPilotVolume/Com2vPilotVolume.csproj
@@ -56,15 +56,15 @@ jobs:
       - name: Prepare ZIP
         run: |
           cd out
-          Compress-Archive -Path * -DestinationPath ../Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
+          Compress-Archive -Path * -DestinationPath ../Com2vPilotVolume-${{ steps.get_version.outputs.short_version }}.zip
         shell: powershell
 
       # --- GitHub Release ---
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          release_name: v${{ steps.get_version.outputs.version }}
-          files: Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
+          tag_name: v${{ steps.get_version.outputs.short_version }}
+          release_name: v${{ steps.get_version.outputs.short_version }}
+          files: Com2vPilotVolume-${{ steps.get_version.outputs.versshort_versionion }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
