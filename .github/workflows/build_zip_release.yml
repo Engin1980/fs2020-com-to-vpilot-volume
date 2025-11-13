@@ -28,6 +28,9 @@ jobs:
           file: Com2vPilotVolume/Com2vPilotVolume.csproj
           xpath: //PropertyGroup/Version
           regex: ^(?<major>[0-9]+)\.(?<minor>[0-9]+)\.(?<patch>[0-9]+)(\.[0-9]+)?$
+
+      - name: Show long version
+        run: echo "Version = ${{ steps.get_version.outputs.version }}"
       
       # --- Zkrácení verze na major.minor.patch ---
       - name: Normalize version
@@ -38,8 +41,8 @@ jobs:
           echo "short_version=$shortVersion" >> $env:GITHUB_OUTPUT
         shell: pwsh
 
-      - name: Show version
-        run: echo "Version = ${{ steps.get_version.outputs.short_version }}"
+      - name: Show short version
+        run: echo "Short Version = ${{ steps.get_version.outputs.short_version }}"
 
       - name: Restore dependencies
         run: dotnet restore Com2vPilotVolume/Com2vPilotVolume.csproj
@@ -60,11 +63,13 @@ jobs:
         shell: powershell
 
       # --- GitHub Release ---
-      - name: Create GitHub Release
+      - name: Create or update GitHub Release (draft)
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.get_version.outputs.short_version }}
-          release_name: v${{ steps.get_version.outputs.short_version }}
-          files: Com2vPilotVolume-${{ steps.get_version.outputs.short_version }}.zip
+          tag_name: v${{ steps.normalize_version.outputs.short_version }}
+          name: v${{ steps.normalize_version.outputs.short_version }}
+          files: Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
+          draft: true
+          overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
