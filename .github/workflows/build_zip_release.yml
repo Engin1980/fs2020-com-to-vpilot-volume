@@ -42,7 +42,7 @@ jobs:
         shell: pwsh
 
       - name: Show short version
-        run: echo "Short Version = ${{ steps.get_version.outputs.short_version }}"
+        run: echo "Short Version = ${{ steps.normalize_version.outputs.short_version }}"
 
       - name: Restore dependencies
         run: dotnet restore Com2vPilotVolume/Com2vPilotVolume.csproj
@@ -59,7 +59,7 @@ jobs:
       - name: Prepare ZIP
         run: |
           cd out
-          Compress-Archive -Path * -DestinationPath ../Com2vPilotVolume-${{ steps.get_version.outputs.short_version }}.zip
+          Compress-Archive -Path * -DestinationPath ../Com2vPilotVolume-${{ steps.normalize_version.outputs.short_version }}.zip
         shell: powershell
 
       # --- GitHub Release ---
@@ -68,7 +68,7 @@ jobs:
         with:
           tag_name: v${{ steps.normalize_version.outputs.short_version }}
           name: v${{ steps.normalize_version.outputs.short_version }}
-          files: Com2vPilotVolume-${{ steps.get_version.outputs.version }}.zip
+          files: Com2vPilotVolume-${{ steps.normalize_version.outputs.short_version }}.zip
           draft: true
           overwrite: true
         env:
