@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Animation;
@@ -129,6 +130,19 @@ namespace Eng.Com2vPilotVolume.Services
       }
     }
 
+    private static Process? TryGetProcessById(int id)
+    {
+      try
+      {
+        var ret = Process.GetProcessById(id);
+        return ret;
+      }
+      catch (Exception)
+      {
+        return null;
+      }
+    }
+
     private void ConnectionTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
       if (this.isStopping)
@@ -139,7 +153,8 @@ namespace Eng.Com2vPilotVolume.Services
 
       this.logger.Log(LogLevel.INFO, "Reconnecting...");
       var tmp = this.mixer.GetProcessIds()
-        .Select(q => Process.GetProcessById(q))
+        .Select(q => TryGetProcessById(q))
+        .Where(q => q != null)
         .TapEach(q => this.logger.Log(LogLevel.DEBUG, $"Found process {q.ProcessName}"))
         .FirstOrDefault(q => q.ProcessName == VPILOT_PROCESS_NAME);
       if (tmp is not null)
