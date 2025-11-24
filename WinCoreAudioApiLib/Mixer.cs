@@ -1,8 +1,9 @@
-﻿using ESystem.Logging;
-using ESystem;
+﻿using ESystem;
+using ESystem.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -83,6 +84,45 @@ namespace Eng.WinCoreAudioApiLib
 
       Guid guid = Guid.Empty;
       _ = volume.SetMasterVolume((float)level, ref guid);
+    }
+
+    public double GetMasterVolume()
+    {
+      // get the speakers (1st render + multimedia) device
+      IMMDeviceEnumerator deviceEnumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
+      deviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia, out IMMDevice speakers);
+
+      // activate the endpoint volume interface
+      Guid IID_IAudioEndpointVolume = typeof(IAudioEndpointVolume).GUID;
+      speakers.Activate(ref IID_IAudioEndpointVolume, 0, IntPtr.Zero, out object o);
+      IAudioEndpointVolume endpoint = (IAudioEndpointVolume)o;
+
+      // get the volume level (0.0 - 1.0)
+      endpoint.GetMasterVolumeLevelScalar(out float level);
+
+      // clean up
+      Marshal.ReleaseComObject(endpoint);
+      Marshal.ReleaseComObject(speakers);
+      Marshal.ReleaseComObject(deviceEnumerator);
+      return level;
+    }
+
+    public void SetMasterVolume(double level)
+    {
+      level = Math.Max(0, Math.Min(1, level));
+      IMMDeviceEnumerator deviceEnumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
+      deviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia, out IMMDevice speakers);
+
+      Guid IID_IAudioEndpointVolume = typeof(IAudioEndpointVolume).GUID;
+      speakers.Activate(ref IID_IAudioEndpointVolume, 0, IntPtr.Zero, out object obj);
+      var endpointVolume = (IAudioEndpointVolume)obj;
+
+      Guid guid = Guid.Empty;
+      _ = endpointVolume.SetMasterVolumeLevelScalar((float)level, ref guid);
+
+      Marshal.ReleaseComObject(endpointVolume);
+      Marshal.ReleaseComObject(speakers);
+      Marshal.ReleaseComObject(deviceEnumerator);
     }
 
     private static double NormalizeLevel(double level)

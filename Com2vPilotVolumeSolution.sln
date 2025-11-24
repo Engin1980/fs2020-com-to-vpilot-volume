@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DLLs", "DLLs", "{FA29EBA6-C
 		DLLs\SimConnect.dll = DLLs\SimConnect.dll
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinCoreAudioApiTest", "WinCoreAudioApiTest\WinCoreAudioApiTest.csproj", "{CF7B90ED-6EC7-85BF-B14D-4632CE5E81EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{4311AE8B-019C-49B6-9C97-13D86A4932A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4311AE8B-019C-49B6-9C97-13D86A4932A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4311AE8B-019C-49B6-9C97-13D86A4932A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF7B90ED-6EC7-85BF-B14D-4632CE5E81EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF7B90ED-6EC7-85BF-B14D-4632CE5E81EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF7B90ED-6EC7-85BF-B14D-4632CE5E81EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF7B90ED-6EC7-85BF-B14D-4632CE5E81EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
