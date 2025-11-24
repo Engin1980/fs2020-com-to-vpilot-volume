@@ -55,7 +55,6 @@ namespace Eng.Com2vPilotVolume.Services
 
     private const string VPILOT_PROCESS_NAME = "vPilot";
 
-    private readonly AppVPilotConfig settings;
     private readonly System.Timers.Timer connectionTimer;
     private readonly Mixer mixer;
     private readonly System.Timers.Timer readVolumeTimer;
@@ -66,7 +65,6 @@ namespace Eng.Com2vPilotVolume.Services
 
     public VPilotService(AppVPilotConfig settings)
     {
-      this.settings = settings;
       this.connectionTimer = new System.Timers.Timer()
       {
         AutoReset = true,
@@ -155,8 +153,8 @@ namespace Eng.Com2vPilotVolume.Services
       var tmp = this.mixer.GetProcessIds()
         .Select(q => TryGetProcessById(q))
         .Where(q => q != null)
-        .TapEach(q => this.logger.Log(LogLevel.DEBUG, $"Found process {q.ProcessName}"))
-        .FirstOrDefault(q => q.ProcessName == VPILOT_PROCESS_NAME);
+        .TapEach(q => this.logger.Log(LogLevel.DEBUG, $"Found process {q?.ProcessName ?? "(null)"}"))
+        .FirstOrDefault(q => q?.ProcessName == VPILOT_PROCESS_NAME);
       if (tmp is not null)
       {
         this.State.VPilotProcess = tmp;

@@ -175,4 +175,57 @@ namespace Eng.WinCoreAudioApiLib
     [PreserveSig]
     int GetMute(out bool pbMute);
   }
+
+  [Guid("5CDF2C82-841E-4546-9722-0CF74078229A")]
+  [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  internal interface IAudioEndpointVolume
+  {
+    // notification registration
+    [PreserveSig]
+    int RegisterControlChangeNotify(IntPtr pNotify);
+    [PreserveSig]
+    int UnregisterControlChangeNotify(IntPtr pNotify);
+
+    // channel count
+    [PreserveSig]
+    int GetChannelCount(out uint pnChannelCount);
+
+    // master volume (dB)
+    [PreserveSig]
+    int SetMasterVolumeLevel(float fLevelDB, ref Guid pguidEventContext);
+    [PreserveSig]
+    int SetMasterVolumeLevelScalar(float fLevel, ref Guid pguidEventContext);
+    [PreserveSig]
+    int GetMasterVolumeLevel(out float pfLevelDB);
+    [PreserveSig]
+    int GetMasterVolumeLevelScalar(out float pfLevel);
+
+    // per-channel volume
+    [PreserveSig]
+    int SetChannelVolumeLevel(uint nChannel, float fLevelDB, ref Guid pguidEventContext);
+    [PreserveSig]
+    int SetChannelVolumeLevelScalar(uint nChannel, float fLevel, ref Guid pguidEventContext);
+    [PreserveSig]
+    int GetChannelVolumeLevel(uint nChannel, out float pfLevelDB);
+    [PreserveSig]
+    int GetChannelVolumeLevelScalar(uint nChannel, out float pfLevel);
+
+    // mute
+    [PreserveSig]
+    int SetMute([MarshalAs(UnmanagedType.Bool)] bool bMute, ref Guid pguidEventContext);
+    [PreserveSig]
+    int GetMute([MarshalAs(UnmanagedType.Bool)] out bool pbMute);
+
+    // step / hardware info
+    [PreserveSig]
+    int GetVolumeStepInfo(out uint pnStep, out uint pnStepCount);
+    [PreserveSig]
+    int VolumeStepUp(ref Guid pguidEventContext);
+    [PreserveSig]
+    int VolumeStepDown(ref Guid pguidEventContext);
+    [PreserveSig]
+    int QueryHardwareSupport(out uint pdwHardwareSupportMask);
+    [PreserveSig]
+    int GetVolumeRange(out float pflVolumeMindB, out float pflVolumeMaxdB, out float pflVolumeIncrementdB);
+  }
 }

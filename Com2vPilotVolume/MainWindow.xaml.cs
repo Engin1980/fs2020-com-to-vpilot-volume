@@ -1,4 +1,5 @@
-﻿using Eng.Com2vPilotVolume;
+﻿using eng.com2vPilotVolume.Services;
+using Eng.Com2vPilotVolume;
 using Eng.Com2vPilotVolume.Services;
 using Eng.Com2vPilotVolume.Types;
 using Eng.WinCoreAudioApiLib;
@@ -32,7 +33,14 @@ namespace Eng.Com2vPilotVolume
   /// </summary>
   public partial class MainWindow : Window
   {
-    public record Services(SimConService SimConService, VPilotService VPilotService, KeyHookService KeyHookService, SoundService SoundService);
+    private const int APP_SETTINGS_VERSION = 2;
+
+    public record Services(
+      SimConService SimConService, 
+      VPilotService VPilotService, 
+      KeyHookService KeyHookService, 
+      SoundPlayService SoundService,
+      VolumeInitService ProcessVolumeInitService);
 
     #region Public Classes
 
@@ -45,8 +53,14 @@ namespace Eng.Com2vPilotVolume
 
       public double GuiVolume
       {
-        get { return base.GetProperty<double>(nameof(GuiVolume))!; }
-        set { base.UpdateProperty(nameof(GuiVolume), value); }
+        get => base.GetProperty<double>(nameof(GuiVolume))!; 
+        set => base.UpdateProperty(nameof(GuiVolume), value);
+      }
+
+      public bool ProcesVolumeInitialized
+      {
+        get => base.GetProperty<bool>(nameof(ProcesVolumeInitialized))!;
+        set => base.UpdateProperty(nameof(ProcesVolumeInitialized), value);
       }
 
       #endregion Public Properties
@@ -60,6 +74,7 @@ namespace Eng.Com2vPilotVolume
 
         this.SimConState = simConState;
         this.VPilotState = vpilotState;
+        this.ProcesVolumeInitialized = false;
       }
 
       #endregion Public Constructors
@@ -93,7 +108,7 @@ namespace Eng.Com2vPilotVolume
 
       this.Title = $"FS2020 Com->VPilot Volume (ver. {Assembly.GetExecutingAssembly().GetName().Version})";
 
-      SettingsProvider.LoadAppSettings(out List<string> errors);
+      SettingsProvider.LoadAppSettings(APP_SETTINGS_VERSION, out List<string> errors);
 
       // log init
       this.logger = Logger.Create(this, "Main", false);
@@ -132,7 +147,8 @@ namespace Eng.Com2vPilotVolume
           new SimConService(App.AppSettings.AppSimCon),
           new VPilotService(App.AppSettings.AppVPilot),
           new KeyHookService(App.AppSettings.KeyboardMappings),
-          new SoundService(App.AppSettings.Sounds)
+          new SoundPlayService(App.AppSettings.Sounds),
+          new VolumeInitService(App.AppSettings.VolumeInitialization)
           );
       }
       catch (Exception ex)
@@ -160,6 +176,7 @@ namespace Eng.Com2vPilotVolume
       this.services.SimConService.ActiveComChangedCallback += appSimCon_ActiveComChangedCallback;
       this.services.SimConService.FrequencyChangedCallback += appSimCon_FrequencyChangedCallback;
       this.services.KeyHookService.VolumeChangeRequested += keyHookService_VolumeChangeRequested;
+      
 
       this.Width = sett.StartupWindowSize[0];
       this.Height = sett.StartupWindowSize[1];
@@ -167,10 +184,20 @@ namespace Eng.Com2vPilotVolume
       this.Model = new ViewModel(
         this.services.SimConService.State,
         this.services.VPilotService.State);
+      this.Model.PropertyChanged += Model_PropertyChanged;
       this.DataContext = this.Model;
       this.isInitialized = true;
 
       this.Model.GuiVolume = 100;
+
+    }
+
+    private void Model_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+      if (Model.ProcesVolumeInitialized || Model.VPilotState.IsConnected == false || Model.SimConState.IsConnected == false)
+        return;
+
+      this.services.ProcessVolumeInitService.ApplyProcessVolumeInitializationsAsync();
     }
 
     private void keyHookService_VolumeChangeRequested(double changeAmount, bool isRelative)
@@ -338,9 +365,14 @@ namespace Eng.Com2vPilotVolume
       t = this.services.SoundService.StartAsync();
       tasks.Add(t);
 
+      t = this.services.ProcessVolumeInitService.StartAsync();
+      tasks.Add(t);
+
       await Task.WhenAll(tasks);
 
       PrintAbout();
+
+      _ = this.services.ProcessVolumeInitService.ApplyProcessVolumeInitializationsAsync();
     }
 
     private void Window_StateChanged(object sender, EventArgs e)

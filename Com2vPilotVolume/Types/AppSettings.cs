@@ -8,12 +8,14 @@ namespace Eng.Com2vPilotVolume.Types
 {
   public class AppSettings
   {
+    public int Version { get; set; } = 0;
     public AppSimConConfig AppSimCon { get; set; } = new AppSimConConfig();
     public AppVPilotConfig AppVPilot { get; set; } = new AppVPilotConfig();
     public VolumeMappingConfig VolumeMapping { get; set; } = new VolumeMappingConfig();
     public SoundsConfig Sounds { get; set; } = new SoundsConfig();
     public MainWindowConfig MainWindow { get; set; } = new MainWindowConfig();
     public KeyboardMappingsConfig KeyboardMappings { get; set; } = new KeyboardMappingsConfig();
+    public VolumeInitializationConfig VolumeInitialization { get; set; } = new VolumeInitializationConfig();
   }
 
   public class AppSimConConfig
@@ -67,5 +69,17 @@ namespace Eng.Com2vPilotVolume.Types
 
   public class KeyboardMappingsConfig : List<KeyboardMappingEntry>
   {
+  }
+
+  public class ProcessVolumeConfig
+  {
+    public string ProcessNameRegex { get; set; } = string.Empty;
+    public int Volume { get; set; }
+  }
+
+  public class VolumeInitializationConfig
+  {
+    public int MasterVolume { get; set; }
+    public List<ProcessVolumeConfig> ProcessVolumes { get; set; } = [];
   }
 }

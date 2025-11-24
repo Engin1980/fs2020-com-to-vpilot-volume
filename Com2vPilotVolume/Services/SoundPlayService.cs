@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Eng.Com2vPilotVolume.Services
 {
-  public class SoundService(SoundsConfig settings) : BaseService
+  public class SoundPlayService(SoundsConfig settings) : BaseService
   {
     private readonly SoundsConfig settings = settings;
 

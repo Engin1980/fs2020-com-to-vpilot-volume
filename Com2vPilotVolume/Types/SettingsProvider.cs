@@ -18,12 +18,26 @@ namespace Eng.Com2vPilotVolume.Types
     public static string DefaultConfigFilePath => "appsettings.json";
     public record SettingsAndConfig(AppSettings? AppSettings, IConfigurationRoot Configuration);
 
-    public static void LoadAppSettings(out List<string> errors)
+    public static void LoadAppSettings(int expectedVersion, out List<string> errors)
     {
       errors = [];
-      SettingsAndConfig sac = TryLoadUserSettings(ref errors);
-      if (sac.AppSettings == null)
+      SettingsAndConfig? sac = TryLoadUserSettings(ref errors);
+      if (sac != null && sac.AppSettings != null && sac.AppSettings.Version != expectedVersion)
+      {
+        errors.Add($"User settings version {sac.AppSettings.Version} does not match expected version {expectedVersion}. Default app settings are used.");
+        sac = null;
+      }
+      if (sac == null || sac.AppSettings == null)
         sac = LoadDefaultSettings(ref errors);
+      if (sac != null && sac.AppSettings != null && sac.AppSettings.Version != expectedVersion)
+      {
+        errors.Add($"Global settings version {sac.AppSettings.Version} does not match expected version {expectedVersion}. Program error or obsolete version? Check for update or report this issue.");
+      }
+      if (sac == null)
+      {
+        errors.Add("Failed to load any app settings. Using empty settings. Program error or obsolete version. Check for update or report this as an issue.");
+        sac = new(new AppSettings(), new ConfigurationBuilder().Build());
+      }
       App.AppSettings = sac.AppSettings!;
       App.Configuration = sac.Configuration;
     }
