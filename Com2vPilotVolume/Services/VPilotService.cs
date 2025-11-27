@@ -155,8 +155,8 @@ namespace Eng.Com2vPilotVolume.Services
       var tmp = this.mixer.GetProcessIds()
         .Select(q => TryGetProcessById(q))
         .Where(q => q != null)
-        .TapEach(q => this.logger.Log(LogLevel.DEBUG, $"Found process {q.ProcessName}"))
-        .FirstOrDefault(q => q.ProcessName == VPILOT_PROCESS_NAME);
+        .TapEach(q => this.logger.Log(LogLevel.DEBUG, $"Found process {q?.ProcessName ?? "(null)"}"))
+        .FirstOrDefault(q => q?.ProcessName == VPILOT_PROCESS_NAME);
       if (tmp is not null)
       {
         this.State.VPilotProcess = tmp;

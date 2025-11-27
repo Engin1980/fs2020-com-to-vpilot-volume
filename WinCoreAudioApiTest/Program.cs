@@ -17,6 +17,8 @@ var pidNames = System.Diagnostics.Process.GetProcesses()
 Console.WriteLine("Master volume: " + m.GetMasterVolume());
 m.SetMasterVolume(m.GetMasterVolume() * 0.5);
 
+m.SetVolume(12860, 0.2);
+
 foreach (var v in vols)
 {
     Console.WriteLine($"PID: {v.pid}, Name: {pidNames[v.pid]}, Volume: {v.vol}");
