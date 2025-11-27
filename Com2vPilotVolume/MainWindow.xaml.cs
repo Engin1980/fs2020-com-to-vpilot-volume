@@ -33,12 +33,14 @@ namespace Eng.Com2vPilotVolume
   /// </summary>
   public partial class MainWindow : Window
   {
+    private const int APP_SETTINGS_VERSION = 2;
+
     public record Services(
       SimConService SimConService, 
       VPilotService VPilotService, 
       KeyHookService KeyHookService, 
       SoundPlayService SoundService,
-      ProcessVolumeInitService ProcessVolumeInitService);
+      VolumeInitService ProcessVolumeInitService);
 
     #region Public Classes
 
@@ -106,7 +108,7 @@ namespace Eng.Com2vPilotVolume
 
       this.Title = $"FS2020 Com->VPilot Volume (ver. {Assembly.GetExecutingAssembly().GetName().Version})";
 
-      SettingsProvider.LoadAppSettings(out List<string> errors);
+      SettingsProvider.LoadAppSettings(APP_SETTINGS_VERSION, out List<string> errors);
 
       // log init
       this.logger = Logger.Create(this, "Main", false);
@@ -146,7 +148,7 @@ namespace Eng.Com2vPilotVolume
           new VPilotService(App.AppSettings.AppVPilot),
           new KeyHookService(App.AppSettings.KeyboardMappings),
           new SoundPlayService(App.AppSettings.Sounds),
-          new ProcessVolumeInitService(App.AppSettings.VolumeInitialization)
+          new VolumeInitService(App.AppSettings.VolumeInitialization)
           );
       }
       catch (Exception ex)
@@ -174,7 +176,7 @@ namespace Eng.Com2vPilotVolume
       this.services.SimConService.ActiveComChangedCallback += appSimCon_ActiveComChangedCallback;
       this.services.SimConService.FrequencyChangedCallback += appSimCon_FrequencyChangedCallback;
       this.services.KeyHookService.VolumeChangeRequested += keyHookService_VolumeChangeRequested;
-      this.Model.PropertyChanged += Model_PropertyChanged;
+      
 
       this.Width = sett.StartupWindowSize[0];
       this.Height = sett.StartupWindowSize[1];
@@ -182,10 +184,12 @@ namespace Eng.Com2vPilotVolume
       this.Model = new ViewModel(
         this.services.SimConService.State,
         this.services.VPilotService.State);
+      this.Model.PropertyChanged += Model_PropertyChanged;
       this.DataContext = this.Model;
       this.isInitialized = true;
 
       this.Model.GuiVolume = 100;
+
     }
 
     private void Model_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -361,9 +365,14 @@ namespace Eng.Com2vPilotVolume
       t = this.services.SoundService.StartAsync();
       tasks.Add(t);
 
+      t = this.services.ProcessVolumeInitService.StartAsync();
+      tasks.Add(t);
+
       await Task.WhenAll(tasks);
 
       PrintAbout();
+
+      this.services.ProcessVolumeInitService.ApplyProcessVolumeInitializationsAsync();
     }
 
     private void Window_StateChanged(object sender, EventArgs e)

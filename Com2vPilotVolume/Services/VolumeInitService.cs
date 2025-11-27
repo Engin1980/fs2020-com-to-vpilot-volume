@@ -4,17 +4,18 @@ using Eng.WinCoreAudioApiLib;
 using ESystem.Asserting;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace eng.com2vPilotVolume.Services
 {
-  public class ProcessVolumeInitService : BaseService
+  public class VolumeInitService : BaseService
   {
     private readonly VolumeInitializationConfig config;
 
-    public ProcessVolumeInitService(VolumeInitializationConfig config)
+    public VolumeInitService(VolumeInitializationConfig config)
     {
       EAssert.Argument.IsNotNull(config, nameof(config));
       this.config = config;
@@ -34,7 +35,7 @@ namespace eng.com2vPilotVolume.Services
       this.logger.Info($"Setting up master volume level to {this.config.MasterVolume} %");
       try
       {
-        m.SetMasterVolume(this.config.MasterVolume / 100);
+        m.SetMasterVolume(this.config.MasterVolume / 100d);
       }
       catch (Exception ex)
       {
@@ -47,7 +48,7 @@ namespace eng.com2vPilotVolume.Services
         .Select(q => new { Id = q, Process = allProcesses.FirstOrDefault(p => p.Id == q), Volume = m.GetVolume(q) })
         .Where(q => q.Process != null)
         .Select(q => new { q.Id, Process = q.Process!, q.Volume })
-        .Where(q => q.Process.HasExited == false);
+        .Where(q => IsProcessAliveAndAccessible(q.Process));
 
       this.logger.Debug($"Found {processInfos.Count()} audio processes.");
       foreach (var pi in processInfos)
@@ -59,12 +60,14 @@ namespace eng.com2vPilotVolume.Services
       {
         foreach (var pi in processInfos)
         {
-          if (System.Text.RegularExpressions.Regex.IsMatch(pi.Process.ProcessName, vi.ProcessNameRegex))
+          bool isMatch = System.Text.RegularExpressions.Regex.IsMatch(pi.Process.ProcessName, vi.ProcessNameRegex);
+          this.logger.Trace($"Process {pi.Process.ProcessName} vs regex {vi.ProcessNameRegex} is match ? {isMatch}");
+          if (isMatch)
           {
             this.logger.Info($"Setting initial volume for process '{pi.Process.ProcessName}' (ID: {pi.Id}) to {vi.Volume}% (was {pi.Volume * 100:F1}%)");
             try
             {
-              m.SetVolume(pi.Id, vi.Volume / 100);
+              m.SetVolume(pi.Id, vi.Volume / 100d);
             }
             catch (Exception ex)
             {
@@ -74,6 +77,18 @@ namespace eng.com2vPilotVolume.Services
         }
 
         this.logger.Info("Process volume initializations completed.");
+      }
+    }
+
+    private bool IsProcessAliveAndAccessible(Process p)
+    {
+      try
+      {
+        return p.HasExited == false;
+      }
+      catch
+      {
+        return false;
       }
     }
 

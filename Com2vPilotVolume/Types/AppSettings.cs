@@ -8,6 +8,7 @@ namespace Eng.Com2vPilotVolume.Types
 {
   public class AppSettings
   {
+    public int Version { get; set; } = 0;
     public AppSimConConfig AppSimCon { get; set; } = new AppSimConConfig();
     public AppVPilotConfig AppVPilot { get; set; } = new AppVPilotConfig();
     public VolumeMappingConfig VolumeMapping { get; set; } = new VolumeMappingConfig();
