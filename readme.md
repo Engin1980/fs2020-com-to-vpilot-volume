@@ -49,6 +49,9 @@ For more info about principle, implementation or configuration see [Project Wiki
 
 ## Version history
 
+**v0.7.2 - 2025-11-27**
+* Added master volume handling + init app volume level
+
 **v0.7.0 - 2025-11-13**
 * Added key hooks
 * Internally rewritten to new concept of services

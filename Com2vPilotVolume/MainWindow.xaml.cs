@@ -276,7 +276,13 @@ namespace Eng.Com2vPilotVolume
     private void ExtendLog(LogItem li)
     {
       if (!Dispatcher.CheckAccess())
+        try { 
         Dispatcher.Invoke(() => ExtendLog(li));
+        } catch (TaskCanceledException)
+        {
+          // task canceled, typically due to shutdown
+          // intentionally ignored
+        }
       else
       {
         txtOut.AppendText($"\n{DateTime.Now,-20}  {li.SenderName,-20}  {li.Level,-12}  {li.Message}");
@@ -371,8 +377,6 @@ namespace Eng.Com2vPilotVolume
       await Task.WhenAll(tasks);
 
       PrintAbout();
-
-      _ = this.services.ProcessVolumeInitService.ApplyProcessVolumeInitializationsAsync();
     }
 
     private void Window_StateChanged(object sender, EventArgs e)
