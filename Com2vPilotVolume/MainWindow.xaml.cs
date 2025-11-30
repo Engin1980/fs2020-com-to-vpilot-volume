@@ -197,6 +197,7 @@ namespace Eng.Com2vPilotVolume
       if (Model.ProcesVolumeInitialized || Model.VPilotState.IsConnected == false || Model.SimConState.IsConnected == false)
         return;
 
+      Model.ProcesVolumeInitialized = true;
       this.services.ProcessVolumeInitService.ApplyProcessVolumeInitializationsAsync();
     }
 
